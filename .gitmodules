@@ -1,0 +1,3 @@
+[submodule "modules/Entity_Storage"]
+	path = modules/Entity_Storage
+	url = https://github.com/rezich/Entity_Storage
