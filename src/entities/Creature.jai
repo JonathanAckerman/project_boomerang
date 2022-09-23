@@ -6,7 +6,7 @@ Creature :: struct {
 simulate :: (using creature: *Creature, dt: float) {
     if game.paused then return;
 
-    orientation = lerp_theta(orientation, orientation_intended, rotation_speed * dt);
+    orientation = lerp_theta(orientation, orientation_intended, rotation_speed.cur * dt);
     position += velocity * dt;
 }
 
