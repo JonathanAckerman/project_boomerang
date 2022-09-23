@@ -1,14 +1,14 @@
 Animation :: struct {
-    frames: [..] AnimationFrame;
+    frames: [..] Animation_Frame;
     duration: float;
-    frameTimer: float;
+    frame_timer: float;
 
-    currentFrame := 0;
-    shouldLoop := false;
-    hasFinished := false;
+    current_frame := 0;
+    should_loop := false;
+    has_finished := false;
 }
 
-AnimationFrame :: struct {
+Animation_Frame :: struct {
     using texture: *Texture;
     tint: Color = WHITE;
     size: Vector2;
