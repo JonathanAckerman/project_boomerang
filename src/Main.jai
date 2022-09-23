@@ -19,7 +19,7 @@ the_font: Font;
 #load "Entity.jai";
 #load "Game.jai";
 #load "Input.jai";
-//#load "Util.jai";
+#load "Util.jai";
 
 #import "Math";
 #import "Basic";

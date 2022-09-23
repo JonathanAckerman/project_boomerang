@@ -2,6 +2,7 @@ game: struct {
     resetting: bool;
     paused: bool;
     state: Game_State;
+    player: Handle(Creature);
 }
 
 Game_State :: enum {
@@ -16,11 +17,15 @@ game_loop :: inline () {
     // simulate ----------------------------------------------------------------
     handle_input();
 
+    for _Creature simulate(it, dt);
+
 
     // draw --------------------------------------------------------------------
     BeginDrawing();
 
     ClearBackground(DARKGRAY);
+
+    for _Creature render(it);
 
     DrawFPS(0, 0);
 
@@ -41,5 +46,11 @@ game_loop :: inline () {
 game_reset :: () {
     log("RESETTING GAME");
     reset_entity_storage();
+
     game = .{};
+    {
+        c := CT_PLAYER;
+        c.position = .{100, 100};
+        game.player = spawn(c);
+    }
 }
