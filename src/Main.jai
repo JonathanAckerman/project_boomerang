@@ -1,6 +1,10 @@
+WINDOW_WIDTH :: 1536;
+WINDOW_HEIGHT :: 864;
+WINDOW_CENTER :: Vector2.{WINDOW_WIDTH/2.0, WINDOW_HEIGHT/2.0};
+
 main :: () {
     window_title := to_c_string("PROJECT BOOMERANG");
-    InitWindow(800, 600, window_title);
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, window_title);
     SetTargetFPS(60);
     SetExitKey(0);
     SetMouseCursor(xx MouseCursor.CROSSHAIR);
