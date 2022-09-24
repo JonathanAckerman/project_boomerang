@@ -7,6 +7,7 @@ main :: () {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, window_title);
     SetTargetFPS(60);
     SetExitKey(0);
+    SetTraceLogLevel(xx TraceLogLevel.LOG_NONE);
     SetMouseCursor(xx MouseCursor.CROSSHAIR);
     the_font = LoadFont(temp_c_string("assets/font/mecha.png"));
 
