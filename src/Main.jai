@@ -24,11 +24,16 @@ the_font: Font;
 #load "Game.jai";
 #load "Input.jai";
 #load "Util.jai";
+#load "Animation.jai";
+#load "Graphics.jai";
 
 #import "Math";
 #import "Basic";
 #import "Random";
 #import "Bucket_Array";
+#import "File_Utilities";   // File_Visit_Info
+#import "Hash_Table";       // Table
+#import "String";           // slice()
 
 #import "Entity_Storage";
 #import "Raylib-Jai";

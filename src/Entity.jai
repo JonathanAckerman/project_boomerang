@@ -7,6 +7,7 @@ Entity :: struct {
     velocity: Vector2;
     orientation: float;
     orientation_intended: float;
+    animation: Animation;
 }
 
 Stat_Range :: struct {
