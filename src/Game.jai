@@ -4,6 +4,10 @@ game: struct {
     state: Game_State;
     player: Handle(Creature);
     dt: float;
+    camera: struct {
+        zoom := 1.0;
+        position: Vector2;
+    }
 }
 
 Game_State :: enum {
@@ -21,6 +25,8 @@ game_loop :: inline () {
 
     for _Creature simulate(it);
 
+    player_obj, _ := from_handle(player); 
+    camera.position = player_obj.position;
 
     // draw --------------------------------------------------------------------
     BeginDrawing();

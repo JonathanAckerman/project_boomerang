@@ -23,7 +23,7 @@ simulate :: (using creature: *Creature) {
 
 render :: (using creature: *Creature) {
     update_animation(*creature.animation);
-    draw_texture_centered_with_rotation(Current_Frame(creature.animation), creature.position, atan2(-creature.forward.y, creature.forward.x));
+    draw_texture_centered_with_rotation(Current_Frame(creature.animation), world_to_screen(creature.position), atan2(-creature.forward.y, creature.forward.x));
 }
 
 Creatures: struct {
