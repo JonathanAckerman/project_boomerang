@@ -65,6 +65,7 @@ game_reset :: () {
         c = Creatures.SMALL_FRY;
         c.position = .{300, 300};
         c.animation = NewAnimation("small_fry/idle");
+        c.ai.has_AI = true;
         array_add(*enemies, spawn(c));
     }
 }

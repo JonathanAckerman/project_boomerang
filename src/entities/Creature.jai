@@ -1,9 +1,12 @@
 Creature :: struct {
     using #as entity: Entity;
+    ai: AI_Data;
 }
 
 simulate :: (using creature: *Creature) {
     if game.paused then return;
+
+    if creature.ai.has_AI then update_ai(creature);
 
     forward = lerp(forward, forward_intended, rotation_speed.cur * game.dt);
     if dot(forward, forward_intended) > 0.7

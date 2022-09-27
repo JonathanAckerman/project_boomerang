@@ -27,6 +27,7 @@ the_font: Font;
 #load "Utils.jai";
 #load "Animation.jai";
 #load "Graphics.jai";
+#load "AI.jai";
 
 #import "Math";
 #import "Basic";
