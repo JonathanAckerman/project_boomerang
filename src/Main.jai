@@ -6,7 +6,7 @@ main :: () {
     window_title := to_c_string("PROJECT BOOMERANG");
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, window_title);
     SetTargetFPS(60);
-    SetExitKey(0);
+    // SetExitKey(0); // for now leave esc it makes it faster to debug
     SetTraceLogLevel(xx TraceLogLevel.LOG_NONE);
     SetMouseCursor(xx MouseCursor.CROSSHAIR);
     the_font = LoadFont(temp_c_string("assets/font/mecha.png"));
@@ -24,7 +24,7 @@ the_font: Font;
 #load "Entity.jai";
 #load "Game.jai";
 #load "Input.jai";
-#load "Util.jai";
+#load "Utils.jai";
 #load "Animation.jai";
 #load "Graphics.jai";
 

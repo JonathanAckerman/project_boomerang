@@ -1,26 +1,43 @@
 Creature :: struct {
     using #as entity: Entity;
-    speed: float;
 }
 
 simulate :: (using creature: *Creature, dt: float) {
     if game.paused then return;
 
     orientation = lerp_theta(orientation, orientation_intended, rotation_speed.cur * dt);
-    position += velocity * dt;
+    if abs(orientation - orientation_intended) < PI/8
+        then position += velocity * dt;
 }
 
 render :: (using creature: *Creature) {
-    DrawCircleV(position, UNIT_SCALE, BLUE);
-    LINE_LENGTH_BACK :: 4;
-    LINE_LENGTH_FRONT :: 16;
-    back_point := xy(cos(orientation), sin(orientation)) * LINE_LENGTH_BACK;
-    front_point := xy(cos(orientation), sin(orientation)) * LINE_LENGTH_FRONT;
-    DrawLineV(position + back_point, position + front_point, RED);
+    update_animation(*creature.animation);
+    draw_texture_centered_with_rotation(Current_Frame(creature.animation), creature.position, creature.orientation);
 }
 
-CT_PLAYER :: Creature.{
-    speed = 150
-};
+Creatures: struct {
+    PLAYER :: Creature.{
+        // for some reason you have to name your arguments here, sadge
+        rotation_speed = .{min=0.1, max=10.0, cur=10.0},
+        move_speed = .{min=100.0, max=550.0, cur=100.0},
+        health = .{min=0, max=3, cur=3},
+    };
+    // Enemies -------------------------------------------------------------------------------
+    SMALL_FRY :: Creature.{
+        rotation_speed = .{min=0.1, max=1.0, cur=1.0},
+        move_speed = .{min=100.0, max=550.0, cur=100.0},
+        health = .{min=0, max=1, cur=1},
+    };
+    MEDIUM_FRY :: Creature.{
+        rotation_speed = .{min=0.1, max=1.0, cur=1.0},
+        move_speed = .{min=100.0, max=550.0, cur=100.0},
+        health = .{min=0, max=2, cur=2},
+    };
+    BIG_FRY :: Creature.{
+        rotation_speed = .{min=0.1, max=1.0, cur=1.0},
+        move_speed = .{min=100.0, max=550.0, cur=100.0},
+        health = .{min=0, max=3, cur=3},
+    };
+}
 
 UNIT_SCALE :: 12;

@@ -5,7 +5,7 @@ game: struct {
     player: Handle(Creature);
     dt: float;
 
-    small_fry: Creature;
+    enemies: [..] Handle(Creature);
 }
 
 Game_State :: enum {
@@ -36,11 +36,8 @@ game_loop :: inline () {
     {
         cstr := temp_c_string("PROJECT BOOMERANG");
         measure := MeasureTextEx(the_font, cstr, xx the_font.baseSize, 1);
-        DrawTextPro(the_font, cstr, .{800-2, 600-2}, measure, 0, xx the_font.baseSize, 1, WHITE);
+        DrawTextPro(the_font, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx the_font.baseSize, 1, WHITE);
     }
-
-    update_animation(*small_fry.animation);
-    draw_texture_centered_with_rotation(Current_Frame(small_fry.animation), small_fry.position, 0.0);
 
     EndDrawing();
 
@@ -57,13 +54,17 @@ game_reset :: () {
     load_all_animations();
 
     game = .{};
+
+    // init creatures
     {
-        c := CT_PLAYER;
+        c := Creatures.PLAYER; 
         c.position = .{100, 100};
+        c.animation = NewAnimation("player/idle");
         player = spawn(c);
 
-        small_fry.position = .{200, 200};
-        small_fry.animation = NewAnimation("small_fry/idle");
-        small_fry.animation.should_loop = true;
+        c = Creatures.SMALL_FRY;
+        c.position = .{300, 300};
+        c.animation = NewAnimation("small_fry/idle");
+        array_add(*enemies, spawn(c));
     }
 }

@@ -6,12 +6,22 @@ handle_input :: inline () {
 
     new_velocity: Vector2;
 
-    if IsKeyDown(xx KeyboardKey.UP)    then new_velocity += xy(0, -1);
-    if IsKeyDown(xx KeyboardKey.DOWN)  then new_velocity += xy(0, 1);
-    if IsKeyDown(xx KeyboardKey.LEFT)  then new_velocity += xy(-1, 0);
-    if IsKeyDown(xx KeyboardKey.RIGHT) then new_velocity += xy(1, 0);
+    if IsKeyDown(xx KeyboardKey.W) || IsKeyDown(xx KeyboardKey.UP) {
+        orientation_intended = PI/2;
+        new_velocity += xy(0, -1);
+    }
+    if IsKeyDown(xx KeyboardKey.S) || IsKeyDown(xx KeyboardKey.DOWN) {
+        orientation_intended = 3*PI/2;
+        new_velocity += xy(0, 1);
+    }
+    if IsKeyDown(xx KeyboardKey.A) || IsKeyDown(xx KeyboardKey.LEFT) {
+        orientation_intended = PI;
+        new_velocity += xy(-1, 0);
+    }
+    if IsKeyDown(xx KeyboardKey.D) || IsKeyDown(xx KeyboardKey.RIGHT) {
+        orientation_intended = 0;
+        new_velocity += xy(1, 0);
+    } 
 
-
-
-    velocity = unit_vector(new_velocity) * speed;
+    velocity = unit_vector(new_velocity) * move_speed.cur;
 }
