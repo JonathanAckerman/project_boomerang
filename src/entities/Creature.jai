@@ -22,7 +22,7 @@ Creatures: struct {
     PLAYER :: Creature.{
         // for some reason you have to name your arguments here, sadge
         rotation_speed = .{min=0.1, max=10.0, cur=10.0},
-        move_speed = .{min=100.0, max=550.0, cur=100.0},
+        move_speed = .{min=100.0, max=550.0, cur=200.0},
         health = .{min=0, max=3, cur=3},
     };
     // Enemies -------------------------------------------------------------------------------
