@@ -5,8 +5,8 @@ Entity :: struct {
     health: Stat_Range;
     position: Vector2;
     velocity: Vector2;
-    orientation: float; // this should maybe be a forward vector instead
-    orientation_intended: float;
+    forward: Vector2;
+    forward_intended: Vector2;
     animation: Animation;
 }
 

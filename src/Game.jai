@@ -21,7 +21,7 @@ game_loop :: inline () {
     // simulate ----------------------------------------------------------------
     handle_input();
 
-    for _Creature simulate(it, dt);
+    for _Creature simulate(it);
 
 
     // draw --------------------------------------------------------------------

@@ -2,17 +2,17 @@ Creature :: struct {
     using #as entity: Entity;
 }
 
-simulate :: (using creature: *Creature, dt: float) {
+simulate :: (using creature: *Creature) {
     if game.paused then return;
 
-    orientation = lerp_theta(orientation, orientation_intended, rotation_speed.cur * dt);
-    if abs(orientation - orientation_intended) < PI/8
-        then position += velocity * dt;
+    forward = lerp(forward, forward_intended, rotation_speed.cur * game.dt);
+    if dot(forward, forward_intended) > 0.7
+        then position += velocity * game.dt;
 }
 
 render :: (using creature: *Creature) {
     update_animation(*creature.animation);
-    draw_texture_centered_with_rotation(Current_Frame(creature.animation), creature.position, creature.orientation);
+    draw_texture_centered_with_rotation(Current_Frame(creature.animation), creature.position, atan2(-creature.forward.y, creature.forward.x));
 }
 
 Creatures: struct {
