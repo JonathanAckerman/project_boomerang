@@ -1,6 +1,14 @@
 Creature :: struct {
     using #as entity: Entity;
     ai: AI_Data;
+    type: Creature_Type;
+}
+
+Creature_Type :: enum {
+    PLAYER;
+    SMALL_FRY;
+    MEDIUM_FRY;
+    BIG_FRY;
 }
 
 simulate :: (using creature: *Creature) {
@@ -24,23 +32,25 @@ Creatures: struct {
         rotation_speed = .{min=0.1, max=10.0, cur=10.0},
         move_speed = .{min=100.0, max=550.0, cur=200.0},
         health = .{min=0, max=3, cur=3},
+        type = .PLAYER,
     };
     // Enemies -------------------------------------------------------------------------------
     SMALL_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=1.0, cur=1.0},
-        move_speed = .{min=100.0, max=550.0, cur=100.0},
+        move_speed = .{min=100.0, max=550.0, cur=200.0},
         health = .{min=0, max=1, cur=1},
+        type = .SMALL_FRY,
     };
     MEDIUM_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=1.0, cur=1.0},
-        move_speed = .{min=100.0, max=550.0, cur=100.0},
+        move_speed = .{min=100.0, max=550.0, cur=150.0},
         health = .{min=0, max=2, cur=2},
+        type = .MEDIUM_FRY,
     };
     BIG_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=1.0, cur=1.0},
         move_speed = .{min=100.0, max=550.0, cur=100.0},
         health = .{min=0, max=3, cur=3},
+        type = .BIG_FRY,
     };
 }
-
-UNIT_SCALE :: 12;

@@ -4,8 +4,6 @@ game: struct {
     state: Game_State;
     player: Handle(Creature);
     dt: float;
-
-    enemies: [..] Handle(Creature);
 }
 
 Game_State :: enum {
@@ -66,6 +64,18 @@ game_reset :: () {
         c.position = .{300, 300};
         c.animation = NewAnimation("small_fry/idle");
         c.ai.has_AI = true;
-        array_add(*enemies, spawn(c));
+        spawn(c);
+
+        c = Creatures.MEDIUM_FRY;
+        c.position = .{500, 400};
+        c.animation = NewAnimation("medium_fry/idle");
+        c.ai.has_AI = true;
+        spawn(c);
+
+        c = Creatures.BIG_FRY;
+        c.position = .{700, 500};
+        c.animation = NewAnimation("big_fry/idle");
+        c.ai.has_AI = true;
+        spawn(c);
     }
 }
