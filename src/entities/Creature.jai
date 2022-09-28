@@ -1,7 +1,8 @@
 Creature :: struct {
     using #as entity: Entity;
-    ai: AI_Data;
     type: Creature_Type;
+    health: Stat_Range;
+    ai: *AI_Data;
 }
 
 Creature_Type :: enum {
@@ -14,7 +15,7 @@ Creature_Type :: enum {
 simulate :: (using creature: *Creature) {
     if game.paused then return;
 
-    if creature.ai.has_AI then update_ai(creature);
+    if creature.ai then update_ai(creature);
 
     forward = lerp(forward, forward_intended, rotation_speed.cur * game.dt);
     if dot(forward, forward_intended) > 0.7

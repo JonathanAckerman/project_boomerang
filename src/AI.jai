@@ -1,6 +1,4 @@
 AI_Data :: struct {
-    has_AI := false; // @Jay: this is a little jank
-
     has_goal := false;
     goal_position: Vector2;
     goal_reset_timer: float;

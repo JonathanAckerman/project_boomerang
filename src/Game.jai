@@ -69,19 +69,19 @@ game_reset :: () {
         c = Creatures.SMALL_FRY;
         c.position = .{300, 300};
         c.animation = NewAnimation("small_fry/idle");
-        c.ai.has_AI = true;
+        c.ai = New(AI_Data); // @Jay: don't forget to free this when we despawn
         spawn(c);
 
         c = Creatures.MEDIUM_FRY;
         c.position = .{500, 400};
         c.animation = NewAnimation("medium_fry/idle");
-        c.ai.has_AI = true;
+        c.ai = New(AI_Data);
         spawn(c);
 
         c = Creatures.BIG_FRY;
         c.position = .{700, 500};
         c.animation = NewAnimation("big_fry/idle");
-        c.ai.has_AI = true;
+        c.ai = New(AI_Data);
         spawn(c);
     }
 }

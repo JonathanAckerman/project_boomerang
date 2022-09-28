@@ -2,7 +2,6 @@ Entity :: struct {
     using #as entity_base: Entity_Base;
     rotation_speed: Stat_Range_f;
     move_speed: Stat_Range_f;
-    health: Stat_Range;
     position: Vector2;
     velocity: Vector2;
     forward: Vector2;
