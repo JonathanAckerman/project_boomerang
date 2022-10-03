@@ -28,6 +28,7 @@ the_font: Font;
 #load "Animation.jai";
 #load "Graphics.jai";
 #load "AI.jai";
+#load "Collider.jai";
 
 #import "Math";
 #import "Basic";

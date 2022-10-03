@@ -2,12 +2,17 @@ game: struct {
     resetting: bool;
     paused: bool;
     state: Game_State;
-    player: Handle(Creature);
     dt: float;
+
+    player: Handle(Creature);
     camera: struct {
         zoom := 1.0;
         position: Vector2;
     }
+
+    physics_colliders: [..] Collider;
+    hurt_colliders:    [..] Collider;
+    hit_colliders:     [..] Collider;
 }
 
 Game_State :: enum {

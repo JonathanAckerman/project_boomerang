@@ -61,6 +61,7 @@ simulate :: (using creature: *Creature) {
     if dot(forward, forward_intended) > 0.8
         then position += velocity * game.dt;
 
+    // respond to Attack input
     if creature.try_attack && creature.weapon.is_ready {
         if creature.weapon.type == {
             case .BOOMERANG;
@@ -72,10 +73,16 @@ simulate :: (using creature: *Creature) {
         }
     }
 
+    // update attack
     if creature.weapon.type == {
         case .BOOMERANG;
             boomerang := *creature.weapon.boomerang;
             if boomerang.is_active {
+                for boomerang.animation.frames for it.colliders {
+                    if it.type == .PHYSICS then array_add(*game.physics_colliders, it);
+                    if it.type == .HIT     then array_add(*game.hit_colliders, it);
+                }
+
                 if !boomerang.is_returning {
                     direction := boomerang.goal_position - boomerang.position;
 
@@ -87,8 +94,7 @@ simulate :: (using creature: *Creature) {
                     if length(boomerang.position - boomerang.goal_position) < 10.0 {
                         boomerang.is_returning = true;
                     }
-                }
-                else {
+                } else {
                     direction := creature.position - boomerang.position;
                     boomerang.position += unit_vector(direction) * boomerang.move_speed * game.dt;
                     if length(boomerang.position - creature.position) < 10.0 {
@@ -98,6 +104,19 @@ simulate :: (using creature: *Creature) {
                     }
                 }
             }
+    }
+
+    // look for colliders on the creature's animation
+    for anim: creature.animations {
+        for frame: anim.frames {
+            for collider: frame.colliders {
+                if collider.type == {
+                    case .PHYSICS; array_add(*game.physics_colliders, collider);
+                    case .HURT;    array_add(*game.hurt_colliders, collider);
+                    case .HIT;     array_add(*game.hit_colliders, collider);
+                }
+            }
+        }
     }
 }
 

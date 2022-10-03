@@ -15,10 +15,25 @@ Animation :: struct {
     has_finished := false;
 }
 
+Animation_Frame :: struct {
+    using texture: *Texture;
+    tint: Color = WHITE;
+    size: Vector2;
+    colliders: [..] Collider;
+}
+
+_file_structure_info :: struct {
+    family: string;         // eg: Creature
+    genus: string;          // eg: Enemy
+    species: string;        // eg: small_fry
+    animation_name: string; // eg: idle
+}
+
+// functions -------------------------------------------------------------------------------
 NewAnimation :: (key: string) -> Animation {
     anim: Animation;
 	found := table_find_pointer(*Animations.table, key);
-	texture_array: [..] Texture2D;
+	texture_array: [..] Texture;
     // if foundPtr == null then textureArray = ERROR_ANIMATION;
 	// else textureArray = <<foundPtr;
 	texture_array = <<found;
@@ -30,19 +45,6 @@ NewAnimation :: (key: string) -> Animation {
     }
     anim.duration = anim.frames.count / 60.0;
     return anim;
-}
-
-Animation_Frame :: struct {
-    using texture: *Texture;
-    tint: Color = WHITE;
-    size: Vector2;
-}
-
-_file_structure_info :: struct {
-    family: string;         // eg: Creature
-    genus: string;          // eg: Enemy
-    species: string;        // eg: small_fry
-    animation_name: string; // eg: idle
 }
 
 get_animations_folder_info :: (info: *File_Visit_Info, data: *[..] _file_structure_info) {
