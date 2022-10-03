@@ -22,8 +22,14 @@ handle_input :: inline () {
     if IsKeyDown(xx KeyboardKey.D) || IsKeyDown(xx KeyboardKey.RIGHT) {
         new_velocity += xy(1, 0);
         forward_intended += xy(1, 0);
-    } 
+    }
 
     forward_intended = unit_vector(forward_intended);
     velocity = unit_vector(new_velocity) * move_speed.cur;
+
+    if IsKeyPressed(xx KeyboardKey.SPACE) {
+        player.try_attack = true;
+    } else {
+        player.try_attack = false;
+    }
 }

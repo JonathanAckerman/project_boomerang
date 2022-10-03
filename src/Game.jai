@@ -62,23 +62,23 @@ game_reset :: () {
     // init creatures
     {
         c := Creatures.PLAYER; 
-        c.position = .{100, 100};
-        c.animation = NewAnimation("player/idle");
+        c.position = .{0, 0};
+        array_add(*c.animations, NewAnimation("player/idle"));
         player = spawn(c);
 
         c = Creatures.SMALL_FRY;
         c.position = .{300, 300};
-        c.animation = NewAnimation("small_fry/idle");
+        array_add(*c.animations, NewAnimation("small_fry/idle"));
         spawn(c);
 
         c = Creatures.MEDIUM_FRY;
         c.position = .{500, 400};
-        c.animation = NewAnimation("medium_fry/idle");
+        array_add(*c.animations, NewAnimation("medium_fry/idle"));
         spawn(c);
 
         c = Creatures.BIG_FRY;
         c.position = .{700, 500};
-        c.animation = NewAnimation("big_fry/idle");
+        array_add(*c.animations, NewAnimation("big_fry/idle"));
         spawn(c);
     }
 }

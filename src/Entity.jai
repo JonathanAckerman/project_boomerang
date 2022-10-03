@@ -6,7 +6,7 @@ Entity :: struct {
     velocity: Vector2;
     forward: Vector2;
     forward_intended: Vector2;
-    animation: Animation;
+    animations: [..] Animation;
 }
 
 Stat_Range :: struct(T: Type) {
