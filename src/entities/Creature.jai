@@ -1,8 +1,9 @@
 Creature :: struct {
     using #as entity: Entity;
     type: Creature_Type;
-    health: Stat_Range;
-    ai: *AI_Data;
+    health: Stat_Range(int);
+    ai: AI_Data;
+    has_ai := false;
 }
 
 Creature_Type :: enum {
@@ -15,10 +16,14 @@ Creature_Type :: enum {
 simulate :: (using creature: *Creature) {
     if game.paused then return;
 
-    if creature.ai then update_ai(creature);
+    alignment := dot(forward, forward_intended);
+    if creature.has_ai {
+        update_ai(creature);
+        forward = lerp(forward, forward_intended, rotation_speed.cur * game.dt);
+    } 
+    else forward = forward_intended;
 
-    forward = lerp(forward, forward_intended, rotation_speed.cur * game.dt);
-    if dot(forward, forward_intended) > 0.7
+    if dot(forward, forward_intended) > 0.8
         then position += velocity * game.dt;
 }
 
@@ -30,28 +35,30 @@ render :: (using creature: *Creature) {
 Creatures: struct {
     PLAYER :: Creature.{
         // for some reason you have to name your arguments here, sadge
-        rotation_speed = .{min=0.1, max=10.0, cur=10.0},
         move_speed = .{min=100.0, max=550.0, cur=200.0},
         health = .{min=0, max=3, cur=3},
         type = .PLAYER,
     };
     // Enemies -------------------------------------------------------------------------------
     SMALL_FRY :: Creature.{
-        rotation_speed = .{min=0.1, max=1.0, cur=1.0},
-        move_speed = .{min=100.0, max=550.0, cur=200.0},
+        rotation_speed = .{min=0.1, max=5.0, cur=4.0},
+        move_speed = .{min=100.0, max=550.0, cur=150.0},
         health = .{min=0, max=1, cur=1},
         type = .SMALL_FRY,
+        has_ai = true,
     };
     MEDIUM_FRY :: Creature.{
-        rotation_speed = .{min=0.1, max=1.0, cur=1.0},
-        move_speed = .{min=100.0, max=550.0, cur=150.0},
+        rotation_speed = .{min=0.1, max=5.0, cur=2.0},
+        move_speed = .{min=100.0, max=550.0, cur=100.0},
         health = .{min=0, max=2, cur=2},
         type = .MEDIUM_FRY,
+        has_ai = true,
     };
     BIG_FRY :: Creature.{
-        rotation_speed = .{min=0.1, max=1.0, cur=1.0},
-        move_speed = .{min=100.0, max=550.0, cur=100.0},
+        rotation_speed = .{min=0.1, max=5.0, cur=1.0},
+        move_speed = .{min=100.0, max=550.0, cur=50.0},
         health = .{min=0, max=3, cur=3},
         type = .BIG_FRY,
+        has_ai = true,
     };
 }

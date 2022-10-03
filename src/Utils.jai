@@ -1,12 +1,5 @@
 lerp_theta :: (a: float, b: float, t: float) -> float {
-    // confine `a and `b to 0..2PI
-    if a < 0    then a = 2*PI + a;
-    if a > 2*PI - EPSILON then a = a - 2*PI;
-    if b < 0    then b = 2*PI + b;
-    if b > 2*PI - EPSILON then b = b - 2*PI;
-
     t2 := b-a;
-    // @Jay: What is dt?
     dt := clamp(t2-floor(t2/TAU) * TAU, 0, TAU);
     return lerp(a, a + (ifx dt > PI then dt-TAU else dt), t);
 }

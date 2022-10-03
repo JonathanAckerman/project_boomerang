@@ -1,5 +1,6 @@
 handle_input :: inline () {
     if IsKeyPressed(xx KeyboardKey.F5) then game.resetting = true;
+    if IsKeyPressed(xx KeyboardKey.F9) then game.paused = !game.paused;
     player, gone := from_handle(game.player);
     if gone /*|| player.status != .ALIVE*/ then return;
     using player;
