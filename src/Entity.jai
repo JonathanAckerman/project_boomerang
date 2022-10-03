@@ -7,6 +7,8 @@ Entity :: struct {
     forward: Vector2;
     forward_intended: Vector2;
     animations: [..] Animation;
+    has_collider := false;
+    collider: Collider; // @Jay: maybe make this an array
 }
 
 Stat_Range :: struct(T: Type) {

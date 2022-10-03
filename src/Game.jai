@@ -33,6 +33,17 @@ game_loop :: inline () {
     player_obj, _ := from_handle(player); 
     camera.position = player_obj.position;
 
+    for * a: physics_colliders {
+        for * b: physics_colliders {
+            if a != b {
+                if length(a.position - b.position) <= a.radius + b.radius {
+                    a.is_colliding = true;
+                    b.is_colliding = true;
+                }
+            }
+        }
+    }
+
     // draw --------------------------------------------------------------------
     BeginDrawing();
 
@@ -48,10 +59,21 @@ game_loop :: inline () {
         DrawTextPro(the_font, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx the_font.baseSize, 1, WHITE);
     }
 
+    for physics_colliders {
+        // @DEBUG
+        color := YELLOW;
+        if it.is_colliding then color = RED;
+        ss_pos := world_to_screen(it.position);
+        if it.radius != 0.0 then DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, color);
+    }
+
     EndDrawing();
 
 
     // cleanup -----------------------------------------------------------------
+    array_reset_keeping_memory(*physics_colliders);
+    array_reset_keeping_memory(*hurt_colliders);
+    array_reset_keeping_memory(*hit_colliders);
     cleanup_despawning_entities();
     reset_temporary_storage();
 }
@@ -72,6 +94,7 @@ game_reset :: () {
         c.weapon.type = .BOOMERANG;
         c.weapon.boomerang.animation = NewAnimation("boomerang/spin");
         c.weapon.boomerang.animation.should_loop = true;
+        c.weapon.boomerang.collider.radius = 50.0;
         player = spawn(c);
 
         c = Creatures.SMALL_FRY;

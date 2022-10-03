@@ -22,6 +22,7 @@ Weapon :: struct {
             goal_position: Vector2;
             rotation_point: Vector2;
             move_speed := 500.0;
+            collider: Collider;
         }
         gloves: struct {
 
@@ -53,7 +54,7 @@ simulate :: (using creature: *Creature) {
     if game.paused then return;
 
     alignment := dot(forward, forward_intended);
-    if creature.has_ai {
+    if has_ai {
         update_ai(creature);
         forward = lerp(forward, forward_intended, rotation_speed.cur * game.dt);
     } 
@@ -62,27 +63,31 @@ simulate :: (using creature: *Creature) {
     if dot(forward, forward_intended) > 0.8
         then position += velocity * game.dt;
 
+    if has_collider {
+        collider.position = position;
+        array_add(*game.physics_colliders, collider);
+    }
+
     // respond to Attack input
-    if creature.try_attack && creature.weapon.is_ready {
-        if creature.weapon.type == {
+    if try_attack && weapon.is_ready {
+        if weapon.type == {
             case .BOOMERANG;
-                boomerang := *creature.weapon.boomerang;
+                boomerang := *weapon.boomerang;
                 boomerang.is_active = true;
-                boomerang.position = creature.position + creature.forward * 10.0;
-                boomerang.goal_position = creature.position + creature.forward * 610.0;
-                boomerang.rotation_point = creature.position + creature.forward * 310.0;
-                creature.weapon.is_ready = false;
+                boomerang.position = position + forward * 10.0;
+                boomerang.goal_position = position + forward * 610.0;
+                boomerang.rotation_point = position + forward * 310.0;
+                weapon.is_ready = false;
         }
     }
 
     // update attack
-    if creature.weapon.type == {
+    if weapon.type == {
         case .BOOMERANG;
-            boomerang := *creature.weapon.boomerang;
+            boomerang := *weapon.boomerang;
             if boomerang.is_active {
                 for boomerang.animation.frames for it.colliders {
-                    if it.type == .PHYSICS then array_add(*game.physics_colliders, it);
-                    if it.type == .HIT     then array_add(*game.hit_colliders, it);
+                    if it.type == .HIT then array_add(*game.hit_colliders, it);
                 }
 
                 if !boomerang.is_returning {
@@ -93,38 +98,40 @@ simulate :: (using creature: *Creature) {
                         boomerang.is_returning = true;
                     }
                 } else {
-                    direction := creature.position - boomerang.position;
+                    direction := position - boomerang.position;
                     boomerang.position += unit_vector(direction) * boomerang.move_speed * game.dt;
-                    if length(boomerang.position - creature.position) < 10.0 {
-                        creature.weapon.is_ready = true;
+                    if length(boomerang.position - position) < 10.0 {
+                        weapon.is_ready = true;
                         boomerang.is_active = false;
                         boomerang.is_returning = false;
                     }
                 }
+                boomerang.collider.position = boomerang.position;
+                array_add(*game.physics_colliders, boomerang.collider);
             }
     }
 
-    // look for colliders on the creature's animation
-    for anim: creature.animations {
-        for frame: anim.frames {
-            for collider: frame.colliders {
-                if collider.type == {
-                    case .PHYSICS; array_add(*game.physics_colliders, collider);
-                    case .HURT;    array_add(*game.hurt_colliders, collider);
-                    case .HIT;     array_add(*game.hit_colliders, collider);
-                }
-            }
-        }
-    }
+    // // look for colliders on the creature's animation
+    // for anim: animations {
+    //     for frame: anim.frames {
+    //         for collider: frame.colliders {
+    //             if collider.type == {
+    //                 case .PHYSICS; array_add(*game.physics_colliders, collider);
+    //                 case .HURT;    array_add(*game.hurt_colliders, collider);
+    //                 case .HIT;     array_add(*game.hit_colliders, collider);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 render :: (using creature: *Creature) {
-    for * creature.animations update_animation(it);
-    draw_texture_centered_with_rotation(Current_Frame(creature.animations[0]), world_to_screen(creature.position), atan2(-creature.forward.y, creature.forward.x));
+    for * animations update_animation(it);
+    draw_texture_centered_with_rotation(Current_Frame(animations[0]), world_to_screen(position), atan2(-forward.y, forward.x));
 
-    if creature.weapon.type == {
+    if weapon.type == {
         case .BOOMERANG;
-            boomerang := *creature.weapon.boomerang;
+            boomerang := *weapon.boomerang;
             if boomerang.is_active {
                 update_animation(*boomerang.animation);
                 draw_texture_centered_with_rotation(Current_Frame(boomerang.animation), world_to_screen(boomerang.position), 0.0);
@@ -138,6 +145,8 @@ Creatures: struct {
         move_speed = .{min=100.0, max=550.0, cur=300.0},
         health = .{min=0, max=3, cur=3},
         type = .PLAYER,
+        collider.radius = 20.0,
+        has_collider = true,
     };
     // Enemies -------------------------------------------------------------------------------
     SMALL_FRY :: Creature.{
@@ -146,6 +155,8 @@ Creatures: struct {
         health = .{min=0, max=1, cur=1},
         type = .SMALL_FRY,
         has_ai = true,
+        collider.radius = 12.0,
+        has_collider = true,
     };
     MEDIUM_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=5.0, cur=2.0},
@@ -153,6 +164,8 @@ Creatures: struct {
         health = .{min=0, max=2, cur=2},
         type = .MEDIUM_FRY,
         has_ai = true,
+        collider.radius = 20.0,
+        has_collider = true,
     };
     BIG_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=5.0, cur=1.0},
@@ -160,5 +173,7 @@ Creatures: struct {
         health = .{min=0, max=3, cur=3},
         type = .BIG_FRY,
         has_ai = true,
+        collider.radius = 30.0,
+        has_collider = true,
     };
 }

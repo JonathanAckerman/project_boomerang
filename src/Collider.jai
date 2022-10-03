@@ -6,7 +6,7 @@ Collider :: struct {
         radius: float;
         size: Vector2;
     }
-    hurt_owner: Handle(Entity);
+    is_colliding := false;
 }
 
 Collider_Type :: enum {
