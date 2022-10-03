@@ -78,7 +78,12 @@ simulate :: (using creature: *Creature) {
             if boomerang.is_active {
                 if !boomerang.is_returning {
                     direction := boomerang.goal_position - boomerang.position;
-                    boomerang.position += unit_vector(direction) * boomerang.move_speed * game.dt;
+
+                    fraction := length(direction) / 600.0; // @TEMP: 600 is the linear dist b/t start and goal
+                    new_range := 2.0 * fraction - 1.0;
+                    displacement := rotate_vector(direction, new_range * PI/3);
+                    boomerang.position += unit_vector(displacement) * boomerang.move_speed * game.dt;
+
                     if length(boomerang.position - boomerang.goal_position) < 10.0 {
                         boomerang.is_returning = true;
                     }
