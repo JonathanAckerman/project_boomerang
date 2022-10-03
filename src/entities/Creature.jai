@@ -20,6 +20,7 @@ Weapon :: struct {
             is_returning := false;
             position: Vector2;
             goal_position: Vector2;
+            rotation_point: Vector2;
             move_speed := 500.0;
         }
         gloves: struct {
@@ -69,6 +70,7 @@ simulate :: (using creature: *Creature) {
                 boomerang.is_active = true;
                 boomerang.position = creature.position + creature.forward * 10.0;
                 boomerang.goal_position = creature.position + creature.forward * 610.0;
+                boomerang.rotation_point = creature.position + creature.forward * 310.0;
                 creature.weapon.is_ready = false;
         }
     }
@@ -84,12 +86,8 @@ simulate :: (using creature: *Creature) {
                 }
 
                 if !boomerang.is_returning {
-                    direction := boomerang.goal_position - boomerang.position;
-
-                    fraction := length(direction) / 600.0; // @TEMP: 600 is the linear dist b/t start and goal
-                    new_range := 2.0 * fraction - 1.0;
-                    displacement := rotate_vector(direction, new_range * PI/3);
-                    boomerang.position += unit_vector(displacement) * boomerang.move_speed * game.dt;
+                    displacement_vector := boomerang.position - boomerang.rotation_point;
+                    boomerang.position = boomerang.rotation_point + rotate_vector(displacement_vector, -game.dt * 1.5);
 
                     if length(boomerang.position - boomerang.goal_position) < 10.0 {
                         boomerang.is_returning = true;
