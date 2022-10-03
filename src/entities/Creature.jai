@@ -15,11 +15,12 @@ Weapon :: struct {
     is_ready := true;
     union {
         boomerang: struct {
+            animation: Animation;
             is_active := false;
             is_returning := false;
             position: Vector2;
             goal_position: Vector2;
-            move_speed := 100.0;
+            move_speed := 500.0;
         }
         gloves: struct {
 
@@ -66,7 +67,7 @@ simulate :: (using creature: *Creature) {
                 boomerang := *creature.weapon.boomerang;
                 boomerang.is_active = true;
                 boomerang.position = creature.position + creature.forward * 10.0;
-                boomerang.goal_position = creature.position + creature.forward * 310.0;
+                boomerang.goal_position = creature.position + creature.forward * 610.0;
                 creature.weapon.is_ready = false;
         }
     }
@@ -78,7 +79,7 @@ simulate :: (using creature: *Creature) {
                 if !boomerang.is_returning {
                     direction := boomerang.goal_position - boomerang.position;
                     boomerang.position += unit_vector(direction) * boomerang.move_speed * game.dt;
-                    if length(boomerang.position - boomerang.goal_position) < 1.0 {
+                    if length(boomerang.position - boomerang.goal_position) < 10.0 {
                         boomerang.is_returning = true;
                     }
                 }
@@ -101,10 +102,10 @@ render :: (using creature: *Creature) {
 
     if creature.weapon.type == {
         case .BOOMERANG;
-            boomerang := creature.weapon.boomerang;
+            boomerang := *creature.weapon.boomerang;
             if boomerang.is_active {
-                print("%\n", boomerang.position);
-                // draw_texture_centered_with_rotation(Current_Frame(creature.animations[1]), world_to_screen(creature.position), atan2(-creature.forward.y, creature.forward.x));
+                update_animation(*boomerang.animation);
+                draw_texture_centered_with_rotation(Current_Frame(boomerang.animation), world_to_screen(boomerang.position), 0.0);
             }
     }
 }

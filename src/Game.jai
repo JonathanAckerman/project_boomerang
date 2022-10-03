@@ -64,6 +64,9 @@ game_reset :: () {
         c := Creatures.PLAYER; 
         c.position = .{0, 0};
         array_add(*c.animations, NewAnimation("player/idle"));
+        c.weapon.type = .BOOMERANG;
+        c.weapon.boomerang.animation = NewAnimation("boomerang/spin");
+        c.weapon.boomerang.animation.should_loop = true;
         player = spawn(c);
 
         c = Creatures.SMALL_FRY;
