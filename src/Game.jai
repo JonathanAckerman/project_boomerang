@@ -10,9 +10,11 @@ game: struct {
         position: Vector2;
     }
 
-    physics_colliders: [..] Collider;
-    hurt_colliders:    [..] Collider;
-    hit_colliders:     [..] Collider;
+    collision_system: struct {
+        hitboxes: [..] Hitbox;
+        hurtboxes: [..] Hurtbox;
+        collideboxes: [..] Collidebox;
+    }
 }
 
 Game_State :: enum {
@@ -24,25 +26,12 @@ game_loop :: inline () {
     using context.entity_storage;
     dt = GetFrameTime();
 
-
     // simulate ----------------------------------------------------------------
     handle_input();
 
-    for _Creature simulate(it);
+    simulate();
 
-    player_obj, _ := from_handle(player); 
-    camera.position = player_obj.position;
-
-    for * a: physics_colliders {
-        for * b: physics_colliders {
-            if a != b {
-                if length(a.position - b.position) <= a.radius + b.radius {
-                    a.is_colliding = true;
-                    b.is_colliding = true;
-                }
-            }
-        }
-    }
+    handle_collision();
 
     // draw --------------------------------------------------------------------
     BeginDrawing();
@@ -59,21 +48,10 @@ game_loop :: inline () {
         DrawTextPro(the_font, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx the_font.baseSize, 1, WHITE);
     }
 
-    for physics_colliders {
-        // @DEBUG
-        color := YELLOW;
-        if it.is_colliding then color = RED;
-        ss_pos := world_to_screen(it.position);
-        if it.radius != 0.0 then DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, color);
-    }
-
     EndDrawing();
 
 
     // cleanup -----------------------------------------------------------------
-    array_reset_keeping_memory(*physics_colliders);
-    array_reset_keeping_memory(*hurt_colliders);
-    array_reset_keeping_memory(*hit_colliders);
     cleanup_despawning_entities();
     reset_temporary_storage();
 }
@@ -85,6 +63,9 @@ game_reset :: () {
     load_all_animations();
 
     game = .{};
+    array_reserve(*game.collision_system.hitboxes, 1024);
+    array_reserve(*game.collision_system.hurtboxes, 1024);
+    array_reserve(*game.collision_system.collideboxes, 1024);
 
     // init creatures
     {
@@ -94,7 +75,7 @@ game_reset :: () {
         c.weapon.type = .BOOMERANG;
         c.weapon.boomerang.animation = NewAnimation("boomerang/spin");
         c.weapon.boomerang.animation.should_loop = true;
-        c.weapon.boomerang.collider.radius = 50.0;
+        c.weapon.boomerang.collidebox.radius = 50.0;
         player = spawn(c);
 
         c = Creatures.SMALL_FRY;
@@ -112,4 +93,36 @@ game_reset :: () {
         array_add(*c.animations, NewAnimation("big_fry/idle"));
         spawn(c);
     }
+}
+
+simulate :: () {
+    using game;
+    for context.entity_storage._Creature simulate(it);
+
+    player_obj, _ := from_handle(player); 
+    camera.position = player_obj.position;
+}
+
+player_on_hit :: (hurtable: *Hurtable, hit: Hit) {
+    log("Player is being damaged for %", hit.damage);
+    if hurtable.health.cur > hurtable.health.min then hurtable.health.cur -= hit.damage;
+    if hurtable.health.cur <= 0 {
+        log("Player was killed");
+    }
+}
+boomerang_on_hit :: (hurtable: *Hurtable, hit: Hit) {
+    log("The boomerang hit something!"); // note "hit" != "collilde"
+}
+enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
+    log("Enemy is being damaged for %", hit.damage);
+    if hurtable.health.cur > hurtable.health.min then hurtable.health.cur -= hit.damage;
+    if hurtable.health.cur <= 0 {
+        log("Enemy was killed");
+    }
+}
+
+boomerang_on_collide :: (owner: *void, collision: Collision) {
+    player := cast(*Creature) owner;
+    log("The boomerang collided with something!");
+    if player.weapon.boomerang.status == .LEAVING then player.weapon.boomerang.status = .RETURNING;
 }

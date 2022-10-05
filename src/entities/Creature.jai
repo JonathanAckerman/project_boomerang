@@ -1,7 +1,8 @@
 Creature :: struct {
     using #as entity: Entity;
+    using #as hurtable: Hurtable;
+    using #as rigidbody: Rigidbody;
     type: Creature_Type;
-    health: Stat_Range(int);
     weapon: Weapon;
 
     has_ai := false;
@@ -12,18 +13,21 @@ Creature :: struct {
 
 Weapon :: struct {
     type: Weapon_Type;
-    is_ready := true;
     union {
         boomerang: struct {
             animation: Animation;
-            is_active := false;
-            is_returning := false;
+            status: enum {
+                SHEATHED;
+                LEAVING;
+                RETURNING;
+            }
             position: Vector2;
             goal_position: Vector2;
             rotation_point: Vector2;
             move_speed := 500.0;
-            collider: Collider;
+            collidebox: Collidebox;
         }
+
         gloves: struct {
 
         }
@@ -63,21 +67,27 @@ simulate :: (using creature: *Creature) {
     if dot(forward, forward_intended) > 0.8
         then position += velocity * game.dt;
 
+    // @Jay: figure out sequencing for taking damage (if the creature dies) and collision resolution
     if has_collider {
         collider.position = position;
-        array_add(*game.physics_colliders, collider);
+        produce_collidebox(collider, *creature, creature_on_collide);
     }
 
+    // @TEMP: for now make the physics collidebox also be the hurtbox
+    hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
+    produce_hurtbox(collider, *hurtable, hit_response);
+
     // respond to Attack input
-    if try_attack && weapon.is_ready {
+    if try_attack {
         if weapon.type == {
             case .BOOMERANG;
                 boomerang := *weapon.boomerang;
-                boomerang.is_active = true;
-                boomerang.position = position + forward * 10.0;
-                boomerang.goal_position = position + forward * 610.0;
-                boomerang.rotation_point = position + forward * 310.0;
-                weapon.is_ready = false;
+                if boomerang.status == .SHEATHED {
+                    boomerang.status = .LEAVING;
+                    boomerang.position = position + forward * 10.0;
+                    boomerang.goal_position = position + forward * 610.0;
+                    boomerang.rotation_point = position + forward * 310.0;
+                }
         }
     }
 
@@ -85,44 +95,33 @@ simulate :: (using creature: *Creature) {
     if weapon.type == {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
-            if boomerang.is_active {
-                for boomerang.animation.frames for it.colliders {
-                    if it.type == .HIT then array_add(*game.hit_colliders, it);
+            
+            if boomerang.status != .SHEATHED {
+                for boomerang.animation.frames {
+                    for it.hitboxes produce_hitbox(it.collider, it.hit);
+                    for it.hurtboxes produce_hurtbox(it.collider, it.hurtable, it.on_hit);
                 }
+                boomerang.collidebox.position = boomerang.position;
+                produce_collidebox(boomerang.collidebox.collider, boomerang.collidebox.owner, boomerang.collidebox.on_collide);
+            }
 
-                if !boomerang.is_returning {
-                    displacement_vector := boomerang.position - boomerang.rotation_point;
-                    boomerang.position = boomerang.rotation_point + rotate_vector(displacement_vector, -game.dt * 1.5);
+            if boomerang.status == .LEAVING {
+                displacement_vector := boomerang.position - boomerang.rotation_point;
+                boomerang.position = boomerang.rotation_point + rotate_vector(displacement_vector, -game.dt * 1.5);
 
-                    if length(boomerang.position - boomerang.goal_position) < 10.0 {
-                        boomerang.is_returning = true;
-                    }
-                } else {
-                    direction := position - boomerang.position;
-                    boomerang.position += unit_vector(direction) * boomerang.move_speed * game.dt;
-                    if length(boomerang.position - position) < 10.0 {
-                        weapon.is_ready = true;
-                        boomerang.is_active = false;
-                        boomerang.is_returning = false;
-                    }
+                if length(boomerang.position - boomerang.goal_position) < 10.0 {
+                    boomerang.status = .RETURNING;
                 }
-                boomerang.collider.position = boomerang.position;
-                array_add(*game.physics_colliders, boomerang.collider);
+            } 
+            
+            if boomerang.status == .RETURNING {
+                direction := position - boomerang.position;
+                boomerang.position += unit_vector(direction) * boomerang.move_speed * game.dt;
+                if length(boomerang.position - position) < 10.0 {
+                    boomerang.status = .SHEATHED;
+                }
             }
     }
-
-    // // look for colliders on the creature's animation
-    // for anim: animations {
-    //     for frame: anim.frames {
-    //         for collider: frame.colliders {
-    //             if collider.type == {
-    //                 case .PHYSICS; array_add(*game.physics_colliders, collider);
-    //                 case .HURT;    array_add(*game.hurt_colliders, collider);
-    //                 case .HIT;     array_add(*game.hit_colliders, collider);
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 render :: (using creature: *Creature) {
@@ -132,13 +131,18 @@ render :: (using creature: *Creature) {
     if weapon.type == {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
-            if boomerang.is_active {
+            if boomerang.status != .SHEATHED {
                 update_animation(*boomerang.animation);
                 draw_texture_centered_with_rotation(Current_Frame(boomerang.animation), world_to_screen(boomerang.position), 0.0);
             }
     }
 }
 
+creature_on_collide :: (owner: *void, collision: Collision) {
+    log("The player collided with something!");
+}
+
+// Archetypes -----------------------------------------------------------------------
 Creatures: struct {
     PLAYER :: Creature.{
         // for some reason you have to name your arguments here, sadge
@@ -148,7 +152,7 @@ Creatures: struct {
         collider.radius = 20.0,
         has_collider = true,
     };
-    // Enemies -------------------------------------------------------------------------------
+    // Enemies ----------------------------------------------------------------------
     SMALL_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=5.0, cur=4.0},
         move_speed = .{min=100.0, max=550.0, cur=150.0},

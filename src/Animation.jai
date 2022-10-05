@@ -19,7 +19,8 @@ Animation_Frame :: struct {
     using texture: *Texture;
     tint: Color = WHITE;
     size: Vector2;
-    colliders: [..] Collider;
+    hitboxes: [..] Hitbox;
+    hurtboxes: [..] Hurtbox;
 }
 
 _file_structure_info :: struct {

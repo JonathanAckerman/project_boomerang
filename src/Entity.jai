@@ -11,6 +11,10 @@ Entity :: struct {
     collider: Collider; // @Jay: maybe make this an array
 }
 
+Hurtable :: struct {
+    health: Stat_Range(int);
+}
+
 Stat_Range :: struct(T: Type) {
     union { min: T; minimum: T; }
     union { max: T; maximum: T; }
