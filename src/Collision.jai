@@ -31,11 +31,13 @@ make_hit :: (damage: int, damage_type: Damage_Type = .NORMAL) -> Hit {
 
 Hitbox :: struct {
     using #as collider: Collider;
+    owner: *void;
     hit: Hit;
 }
-produce_hitbox :: (collider: Collider, hit: Hit) {
+produce_hitbox :: (collider: Collider, owner: *void, hit: Hit) {
     hitbox: Hitbox;
     hitbox.collider = collider;
+    hitbox.owner = owner;
     hitbox.hit = hit;
     array_add(*game.collision_system.hitboxes, hitbox);
 }
@@ -43,12 +45,14 @@ produce_hitbox :: (collider: Collider, hit: Hit) {
 Hurtbox :: struct {
     using #as collider: Collider;
     hurtable: *Hurtable;
+    owner: *void;
     on_hit: (*Hurtable, Hit);
 }
-produce_hurtbox :: (collider: Collider, hurtable: *Hurtable, on_hit: (*Hurtable, Hit)) {
+produce_hurtbox :: (collider: Collider, hurtable: *Hurtable, owner: *void, on_hit: (*Hurtable, Hit)) {
     hurtbox: Hurtbox;
     hurtbox.collider = collider;
     hurtbox.hurtable = hurtable;
+    hurtbox.owner = owner;
     hurtbox.on_hit = on_hit;
     array_add(*game.collision_system.hurtboxes, hurtbox);
 }
@@ -75,7 +79,7 @@ handle_collision :: () {
 
     for * a: collideboxes {
         for * b: collideboxes {
-            if a == b || !a.on_collide continue;
+            if a == b || a.owner == b.owner || !a.on_collide continue;
             is_colliding, collision := check_collision(a, b);
             if is_colliding {
                 a.on_collide(a.owner, collision);
@@ -84,6 +88,7 @@ handle_collision :: () {
     }
     for * hitbox: hitboxes {
         for * hurtbox: hurtboxes {
+            if hitbox.owner == hurtbox.owner || !hurtbox.on_hit continue;
             if check_hit(hitbox, hurtbox) {
                 if hurtbox.on_hit then hurtbox.on_hit(hurtbox.hurtable, hitbox.hit);
                 else log("no on_hit defined!!");

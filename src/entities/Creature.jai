@@ -61,7 +61,7 @@ simulate :: (using creature: *Creature) {
     if has_ai {
         update_ai(creature);
         forward = lerp(forward, forward_intended, rotation_speed.cur * game.dt);
-    } 
+    }
     else forward = forward_intended;
 
     if dot(forward, forward_intended) > 0.8
@@ -70,12 +70,12 @@ simulate :: (using creature: *Creature) {
     // @Jay: figure out sequencing for taking damage (if the creature dies) and collision resolution
     if has_collider {
         collider.position = position;
-        produce_collidebox(collider, *creature, creature_on_collide);
+        produce_collidebox(collider, creature, creature_on_collide);
     }
 
     // @TEMP: for now make the physics collidebox also be the hurtbox
     hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
-    produce_hurtbox(collider, *hurtable, hit_response);
+    produce_hurtbox(collider, *hurtable, creature, hit_response);
 
     // respond to Attack input
     if try_attack {
@@ -98,11 +98,10 @@ simulate :: (using creature: *Creature) {
             
             if boomerang.status != .SHEATHED {
                 for boomerang.animation.frames {
-                    for it.hitboxes produce_hitbox(it.collider, it.hit);
-                    for it.hurtboxes produce_hurtbox(it.collider, it.hurtable, it.on_hit);
+                    for it.hitboxes produce_hitbox(it.collider, creature, it.hit);
                 }
                 boomerang.collidebox.position = boomerang.position;
-                produce_collidebox(boomerang.collidebox.collider, boomerang.collidebox.owner, boomerang.collidebox.on_collide);
+                produce_collidebox(boomerang.collidebox.collider, creature, boomerang.collidebox.on_collide);
             }
 
             if boomerang.status == .LEAVING {

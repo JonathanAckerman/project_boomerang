@@ -71,6 +71,7 @@ game_reset :: () {
     {
         c := Creatures.PLAYER; 
         c.position = .{0, 0};
+        c.collider.position = c.position;
         array_add(*c.animations, NewAnimation("player/idle"));
         c.weapon.type = .BOOMERANG;
         c.weapon.boomerang.animation = NewAnimation("boomerang/spin");
@@ -80,16 +81,19 @@ game_reset :: () {
 
         c = Creatures.SMALL_FRY;
         c.position = .{300, 300};
+        c.collider.position = c.position;
         array_add(*c.animations, NewAnimation("small_fry/idle"));
         spawn(c);
 
         c = Creatures.MEDIUM_FRY;
         c.position = .{500, 400};
+        c.collider.position = c.position;
         array_add(*c.animations, NewAnimation("medium_fry/idle"));
         spawn(c);
 
         c = Creatures.BIG_FRY;
         c.position = .{700, 500};
+        c.collider.position = c.position;
         array_add(*c.animations, NewAnimation("big_fry/idle"));
         spawn(c);
     }
@@ -97,7 +101,9 @@ game_reset :: () {
 
 simulate :: () {
     using game;
-    for context.entity_storage._Creature simulate(it);
+    using context.entity_storage;
+    
+    for _Creature simulate(it);
 
     player_obj, _ := from_handle(player); 
     camera.position = player_obj.position;
@@ -111,7 +117,7 @@ player_on_hit :: (hurtable: *Hurtable, hit: Hit) {
     }
 }
 boomerang_on_hit :: (hurtable: *Hurtable, hit: Hit) {
-    log("The boomerang hit something!"); // note "hit" != "collilde"
+    log("The boomerang hit something!"); // note "hit" != "collide"
 }
 enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
     log("Enemy is being damaged for %", hit.damage);
