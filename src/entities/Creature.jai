@@ -106,7 +106,8 @@ simulate :: (using creature: *Creature) {
 
             if boomerang.status == .LEAVING {
                 displacement_vector := boomerang.position - boomerang.rotation_point;
-                boomerang.position = boomerang.rotation_point + rotate_vector(displacement_vector, -game.dt * 1.5);
+                angular_speed := boomerang.move_speed / length(displacement_vector);
+                boomerang.position = boomerang.rotation_point + rotate_vector(displacement_vector, -angular_speed * game.dt);
 
                 if length(boomerang.position - boomerang.goal_position) < 10.0 {
                     boomerang.status = .RETURNING;
