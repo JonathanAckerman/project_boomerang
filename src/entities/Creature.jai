@@ -1,7 +1,6 @@
 Creature :: struct {
     using #as entity: Entity;
     using #as hurtable: Hurtable;
-    using #as rigidbody: Rigidbody;
     type: Creature_Type;
     weapon: Weapon;
 
@@ -70,7 +69,7 @@ simulate :: (using creature: *Creature) {
     // @Jay: figure out sequencing for taking damage (if the creature dies) and collision resolution
     if has_collider {
         collider.position = position;
-        produce_collidebox(collider, creature, creature_on_collide);
+        produce_collidebox(collider, creature, creature_on_collision_started, creature_on_collision);
     }
 
     // @TEMP: for now make the physics collidebox also be the hurtbox
@@ -96,15 +95,7 @@ simulate :: (using creature: *Creature) {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
             
-            if boomerang.status != .SHEATHED {
-                for boomerang.animation.frames {
-                    for it.hitboxes produce_hitbox(it.collider, creature, it.hit);
-                }
-                boomerang.collidebox.position = boomerang.position;
-                produce_collidebox(boomerang.collidebox.collider, creature, boomerang.collidebox.on_collide);
-            }
-
-            if boomerang.status == .LEAVING {
+            if boomerang.status == .LEAVING {    
                 displacement_vector := boomerang.position - boomerang.rotation_point;
                 angular_speed := boomerang.move_speed / length(displacement_vector);
                 boomerang.position = boomerang.rotation_point + rotate_vector(displacement_vector, -angular_speed * game.dt);
@@ -112,6 +103,7 @@ simulate :: (using creature: *Creature) {
                 if length(boomerang.position - boomerang.goal_position) < 10.0 {
                     boomerang.status = .RETURNING;
                 }
+                produce_collidebox(boomerang.collidebox.collider, creature, boomerang_on_collision);
             } 
             
             if boomerang.status == .RETURNING {
@@ -120,6 +112,13 @@ simulate :: (using creature: *Creature) {
                 if length(boomerang.position - position) < 10.0 {
                     boomerang.status = .SHEATHED;
                 }
+            }
+
+            if boomerang.status != .SHEATHED {
+                for boomerang.animation.frames {
+                    for it.hitboxes produce_hitbox(it.collider, creature, it.hit);
+                }
+                boomerang.collidebox.position = boomerang.position;
             }
     }
 }
@@ -138,8 +137,11 @@ render :: (using creature: *Creature) {
     }
 }
 
-creature_on_collide :: (owner: *void, collision: Collision) {
-    log("The player collided with something!");
+creature_on_collision :: (owner: *void, collision: Collision) {
+    log("The owner collided with %!", collision.other);
+}
+creature_on_collision_started :: (owner: *void, collision: Collision) {
+    log("STARTED!!!: The owner collided with %!", collision.other);
 }
 
 // Archetypes -----------------------------------------------------------------------

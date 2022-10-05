@@ -8,7 +8,8 @@ Entity :: struct {
     forward_intended: Vector2;
     animations: [..] Animation;
     has_collider := false;
-    collider: Collider; // @Jay: maybe make this an array
+    collider: Collider; // @Jay: maybe make this an array, maybe usingas it?
+    using #as rigidbody: Rigidbody;
 }
 
 Hurtable :: struct {

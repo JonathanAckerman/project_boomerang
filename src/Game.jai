@@ -116,9 +116,6 @@ player_on_hit :: (hurtable: *Hurtable, hit: Hit) {
         log("Player was killed");
     }
 }
-boomerang_on_hit :: (hurtable: *Hurtable, hit: Hit) {
-    log("The boomerang hit something!"); // note "hit" != "collide"
-}
 enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
     log("Enemy is being damaged for %", hit.damage);
     if hurtable.health.cur > hurtable.health.min then hurtable.health.cur -= hit.damage;
@@ -127,8 +124,14 @@ enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
     }
 }
 
-boomerang_on_collide :: (owner: *void, collision: Collision) {
+boomerang_on_collision :: (owner: *void, collision: Collision) {
+    other := cast(*Entity) collision.other;
+    if !other.rigidbody.is_static return;
+
     player := cast(*Creature) owner;
     log("The boomerang collided with something!");
     if player.weapon.boomerang.status == .LEAVING then player.weapon.boomerang.status = .RETURNING;
+}
+boomerang_on_hit :: (hurtable: *Hurtable, hit: Hit) {
+    log("The boomerang hit something!"); // note "hit" != "collide"
 }

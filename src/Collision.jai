@@ -5,6 +5,7 @@ Collider :: struct {
         radius: float;
         size: Vector2;
     }
+    was_colliding := false;
 }
 Collider_Shape :: enum { CIRCLE; RECT; }
 
@@ -33,6 +34,7 @@ Hitbox :: struct {
     using #as collider: Collider;
     owner: *void;
     hit: Hit;
+    // on_hit_landed maybe? needs to feedback details of the hit/hurt
 }
 produce_hitbox :: (collider: Collider, owner: *void, hit: Hit) {
     hitbox: Hitbox;
@@ -46,7 +48,7 @@ Hurtbox :: struct {
     using #as collider: Collider;
     hurtable: *Hurtable;
     owner: *void;
-    on_hit: (*Hurtable, Hit);
+    on_hit: (*Hurtable, Hit); // on_get_hurt maybe?
 }
 produce_hurtbox :: (collider: Collider, hurtable: *Hurtable, owner: *void, on_hit: (*Hurtable, Hit)) {
     hurtbox: Hurtbox;
@@ -58,19 +60,24 @@ produce_hurtbox :: (collider: Collider, hurtable: *Hurtable, owner: *void, on_hi
 }
 
 Collision :: struct {
-
+    other: *void;
 }
 
 Collidebox :: struct {
     using #as collider: Collider;
     owner: *void;
-    on_collide: (*void, Collision);
+    on_collision_started: (*void, Collision);
+    on_collision:         (*void, Collision);
 }
-produce_collidebox :: (collider: Collider, owner: *void, on_collide: (*void, Collision)) {
+produce_collidebox :: (collider: Collider, 
+                       owner: *void, 
+                       on_collision_started: (*void, Collision) = null, 
+                       on_collision:         (*void, Collision) = null) {
     collidebox: Collidebox;
     collidebox.collider = collider;
-    collidebox.owner = owner;
-    collidebox.on_collide = on_collide;
+    collidebox.owner    = owner;
+    collidebox.on_collision_started = on_collision_started;
+    collidebox.on_collision         = on_collision;
     array_add(*game.collision_system.collideboxes, collidebox);
 }
 
@@ -78,14 +85,27 @@ handle_collision :: () {
     using game.collision_system;
 
     for * a: collideboxes {
+        is_colliding := false;
+
         for * b: collideboxes {
-            if a == b || a.owner == b.owner || !a.on_collide continue;
-            is_colliding, collision := check_collision(a, b);
-            if is_colliding {
-                a.on_collide(a.owner, collision);
+            if a == b || a.owner == b.owner continue;
+            is_colliding_with_b, collision := check_collision(a, b);
+
+            // Collision
+            if is_colliding_with_b {
+                if a.on_collision then a.on_collision(a.owner, collision);
+
+                // Collision Started
+                if !a.was_colliding {
+                    if a.on_collision_started then a.on_collision_started(a.owner, collision);
+                }
+                is_colliding = true;
             }
         }
+
+        (cast(*Entity) a.owner).collider.was_colliding = is_colliding;
     }
+
     for * hitbox: hitboxes {
         for * hurtbox: hurtboxes {
             if hitbox.owner == hurtbox.owner || !hurtbox.on_hit continue;
@@ -95,6 +115,7 @@ handle_collision :: () {
             }
         }
     }
+
     array_reset_keeping_memory(*hitboxes);
     array_reset_keeping_memory(*hurtboxes);
     array_reset_keeping_memory(*collideboxes);
@@ -102,6 +123,7 @@ handle_collision :: () {
 
 check_collision :: (a: *Collidebox, b: *Collidebox) -> bool, Collision {
     collision: Collision;
+    collision.other = b.owner;
     is_colliding := distance(a.position, b.position) <= a.radius + b.radius;
     if is_colliding { /* fill out collision */ }
     return is_colliding, collision;
