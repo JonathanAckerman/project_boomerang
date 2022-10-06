@@ -61,6 +61,7 @@ produce_hurtbox :: (collider: Collider, hurtable: *Hurtable, owner: *void, on_hi
 
 Collision :: struct {
     other: *void;
+    projection: Vector2;
 }
 
 Collidebox :: struct {
@@ -124,8 +125,8 @@ handle_collision :: () {
 check_collision :: (a: *Collidebox, b: *Collidebox) -> bool, Collision {
     collision: Collision;
     collision.other = b.owner;
-    is_colliding := distance(a.position, b.position) <= a.radius + b.radius;
-    if is_colliding { /* fill out collision */ }
+    is_colliding, projection := check_intersection(a, b);
+    if is_colliding { collision.projection = projection; }
     return is_colliding, collision;
 }
 
@@ -133,19 +134,30 @@ check_hit :: (hitbox: *Hitbox, hurtbox: *Hurtbox) -> bool {
     return check_intersection(hitbox, hurtbox);
 }
 
-check_intersection :: (a: *Collider, b: *Collider) -> bool {
+check_intersection :: (a: *Collider, b: *Collider) -> bool, Vector2 {
+    is_overlapping: bool; projection: Vector2;
     if #complete a.shape == {
         case .CIRCLE; if #complete b.shape == {
-            case .CIRCLE; return circle_circle(a, b);
-            case .RECT;   return aabb_circle(b, a);
+            case .CIRCLE; 
+                is_overlapping, projection = circle_circle(a, b);
+            case .RECT;
+                is_overlapping, projection = aabb_circle(b, a);
         }
         case .RECT; if #complete b.shape == {
-            case .CIRCLE; return aabb_circle(a, b);
-            case .RECT;   return aabb_aabb(a, b);
+            case .CIRCLE;
+                is_overlapping, projection = aabb_circle(a, b);
+            case .RECT;
+                is_overlapping = aabb_aabb(a, b);
         }
     }
+    return is_overlapping, projection;
 
-    circle_circle :: inline (a, b) => distance(a.position, b.position) <= a.radius + b.radius;
+    circle_circle :: inline (a: *Collider, b: *Collider) -> bool, Vector2 {
+        displacement := a.position - b.position;
+        distance := length(displacement);
+        overlap_scalar := (a.radius + b.radius) - distance;
+        return distance < (a.radius + b.radius), unit_vector(displacement) * overlap_scalar;
+    }
     // @Jay: if these dont modify they should pass by value
     aabb_aabb :: inline (a: *Collider, b: *Collider) -> bool {
         a_lower_left  := a.position - a.size/2.0;
@@ -157,7 +169,7 @@ check_intersection :: (a: *Collider, b: *Collider) -> bool {
                 || b_upper_right.y > a_lower_left.y 
                 || b_lower_left.y < a_upper_right.y);
     }
-    aabb_circle :: inline (r: *Collider, c: *Collider) -> bool {
+    aabb_circle :: inline (r: *Collider, c: *Collider) -> bool, Vector2 {
         half_size := r.size/2.0;
         displacement := c.position - r.position;
         closest_x := r.position.x + clamp(displacement.x, -half_size.x, half_size.x);
@@ -166,14 +178,10 @@ check_intersection :: (a: *Collider, b: *Collider) -> bool {
         circle_to_closest := c.position - xy(closest_x, closest_y);
         if length(circle_to_closest) < c.radius
         {
-            return true;
-            // overlap_scalar := c.radius - length(circle_to_closest);
-            // if c.rigidBody.mass < r.rigidBody.mass
-            // {
-            //     if shouldResolve then c.position += unit_vector(circle_to_closest) * overlap_scalar;
-            //     return true;
-            // }
+            overlap_scalar := c.radius - length(circle_to_closest);
+            projection := unit_vector(circle_to_closest) * overlap_scalar;
+            return true, projection;
         }
-        return false;
+        return false, .{};
     }
 }

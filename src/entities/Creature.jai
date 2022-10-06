@@ -138,10 +138,10 @@ render :: (using creature: *Creature) {
 }
 
 creature_on_collision :: (owner: *void, collision: Collision) {
-    log("The owner collided with %!", collision.other);
+    (cast(*Creature) owner).position += collision.projection;
 }
 creature_on_collision_started :: (owner: *void, collision: Collision) {
-    log("STARTED!!!: The owner collided with %!", collision.other);
+    // log("STARTED!!!: The owner collided with %!", collision.other);
 }
 
 // Archetypes -----------------------------------------------------------------------
