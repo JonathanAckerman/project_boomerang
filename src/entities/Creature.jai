@@ -138,10 +138,18 @@ render :: (using creature: *Creature) {
 }
 
 creature_on_collision :: (owner: *void, collision: Collision) {
-    (cast(*Creature) owner).position += collision.projection;
+    owner_creature := (cast(*Creature) owner);
+    other_creature := (cast(*Creature) collision.other);
+    if owner_creature.has_rigidbody && other_creature.has_rigidbody {
+        if owner_creature.rigidbody.mass < other_creature.rigidbody.mass
+            then owner_creature.position += collision.projection;
+        if owner_creature.rigidbody.mass == other_creature.rigidbody.mass
+            then owner_creature.position += collision.projection / 2.0;
+    }
 }
 creature_on_collision_started :: (owner: *void, collision: Collision) {
-    // log("STARTED!!!: The owner collided with %!", collision.other);
+    print("RUDE!\n");
+    // this really only makes sense for colliders that you *can* overlap
 }
 
 // Archetypes -----------------------------------------------------------------------
@@ -153,6 +161,8 @@ Creatures: struct {
         type = .PLAYER,
         collider.radius = 20.0,
         has_collider = true,
+        mass = 100,
+        has_rigidbody = true,
     };
     // Enemies ----------------------------------------------------------------------
     SMALL_FRY :: Creature.{
@@ -163,6 +173,8 @@ Creatures: struct {
         has_ai = true,
         collider.radius = 12.0,
         has_collider = true,
+        mass = 50,
+        has_rigidbody = true,
     };
     MEDIUM_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=5.0, cur=2.0},
@@ -181,5 +193,7 @@ Creatures: struct {
         has_ai = true,
         collider.radius = 30.0,
         has_collider = true,
+        mass = 200,
+        has_rigidbody = true,
     };
 }

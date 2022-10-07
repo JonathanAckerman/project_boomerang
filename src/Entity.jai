@@ -9,6 +9,7 @@ Entity :: struct {
     animations: [..] Animation;
     has_collider := false;
     collider: Collider; // @Jay: maybe make this an array, maybe usingas it?
+    has_rigidbody := false; // perhaps these should be pointers to an Entity array of T
     using #as rigidbody: Rigidbody;
 }
 
