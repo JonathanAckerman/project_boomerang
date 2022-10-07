@@ -129,7 +129,6 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
     if !other.rigidbody.is_static return;
 
     player := cast(*Creature) owner;
-    log("The boomerang collided with something!");
     if player.weapon.boomerang.status == .LEAVING then player.weapon.boomerang.status = .RETURNING;
 }
 boomerang_on_hit :: (hurtable: *Hurtable, hit: Hit) {

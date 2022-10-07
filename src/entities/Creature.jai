@@ -149,7 +149,6 @@ creature_on_collision :: (owner: *void, collision: Collision) {
 }
 creature_on_collision_started :: (owner: *void, collision: Collision) {
     print("RUDE!\n");
-    // this really only makes sense for colliders that you *can* overlap
 }
 
 // Archetypes -----------------------------------------------------------------------
@@ -163,6 +162,7 @@ Creatures: struct {
         has_collider = true,
         mass = 100,
         has_rigidbody = true,
+        rigidbody.is_static = false,
     };
     // Enemies ----------------------------------------------------------------------
     SMALL_FRY :: Creature.{
@@ -175,6 +175,7 @@ Creatures: struct {
         has_collider = true,
         mass = 50,
         has_rigidbody = true,
+        rigidbody.is_static = false,
     };
     MEDIUM_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=5.0, cur=2.0},
@@ -195,5 +196,6 @@ Creatures: struct {
         has_collider = true,
         mass = 200,
         has_rigidbody = true,
+        rigidbody.is_static = false,
     };
 }
