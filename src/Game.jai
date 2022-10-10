@@ -1,3 +1,5 @@
+Hit_ID :: #type,distinct u64;
+
 game: struct {
     resetting: bool;
     paused: bool;
@@ -15,6 +17,9 @@ game: struct {
         hurtboxes: [..] Hurtbox;
         collideboxes: [..] Collidebox;
     }
+
+    _hit_id: Hit_ID;
+    get_next_hit_id :: () -> Hit_ID { game._hit_id += 1; return game._hit_id; }
 
     map: Texture;
 }
@@ -135,11 +140,10 @@ player_on_hit :: (hurtable: *Hurtable, hit: Hit) {
     }
 }
 enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
-    log("Enemy is being damaged for %", hit.damage);
+    for hurtable.hit_blocks if it.hit_id == hit.id return;
+
+    array_add(*hurtable.hit_blocks, make_block(hit.id, GetTime() + hit.tick_rate));
     if hurtable.health.cur > hurtable.health.min then hurtable.health.cur -= hit.damage;
-    if hurtable.health.cur <= 0 {
-        log("Enemy was killed");
-    }
 }
 
 boomerang_on_collision :: (owner: *void, collision: Collision) {
@@ -148,4 +152,5 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
 
     weapon := cast(*Weapon) owner;
     if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .RETURNING;
+    weapon.boomerang.hit_id = game.get_next_hit_id();
 }

@@ -25,6 +25,8 @@ Weapon :: struct {
             rotation_point: Vector2;
             move_speed := 500.0;
             collidebox: Collidebox;
+            hit_id: Hit_ID;
+            tick_rate : float64 = 0.5;
         }
 
         gloves: struct {
@@ -56,6 +58,11 @@ Creature_Type :: enum {
 simulate :: (using creature: *Creature) {
     if game.paused then return;
 
+    // if hurtable.health.cur <= 0 {
+    //     despawn(get_handle(creature));
+    //     return;
+    // }
+
     alignment := dot(forward, forward_intended);
     if has_ai {
         update_ai(creature);
@@ -75,6 +82,7 @@ simulate :: (using creature: *Creature) {
     // @TEMP: for now make the physics collidebox also be the hurtbox
     hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
     produce_hurtbox(collider, *hurtable, creature, hit_response);
+    for hurtable.hit_blocks if GetTime() >= it.end_time then remove it;
 
     // respond to Attack input
     if try_attack {
@@ -86,9 +94,11 @@ simulate :: (using creature: *Creature) {
                     boomerang.position = position + forward * 10.0;
                     boomerang.goal_position = position + forward * 610.0;
                     boomerang.rotation_point = position + forward * 310.0;
+                    boomerang.hit_id = game.get_next_hit_id();
                 }
         }
     }
+    // maybe also have an input to call the boomerang back?
 
     // update attack
     if weapon.type == {
@@ -102,6 +112,7 @@ simulate :: (using creature: *Creature) {
 
                 if length(boomerang.position - boomerang.goal_position) < 10.0 {
                     boomerang.status = .RETURNING;
+                    boomerang.hit_id = game.get_next_hit_id();
                 }
 
                 produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
@@ -119,7 +130,7 @@ simulate :: (using creature: *Creature) {
                 for boomerang.animation.frames {
                     // for it.hitboxes produce_hitbox(it.collider, creature, it.hit);
                     // @TEMP: use collidebox for hitbox
-                    produce_hitbox(boomerang.collidebox.collider, creature, make_hit(1));
+                    produce_hitbox(boomerang.collidebox.collider, creature, make_hit(boomerang.hit_id, 1, tick_rate=boomerang.tick_rate));
                 }
                 boomerang.collidebox.position = boomerang.position;
             }

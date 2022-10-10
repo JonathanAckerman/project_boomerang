@@ -15,6 +15,17 @@ Entity :: struct {
 
 Hurtable :: struct {
     health: Stat_Range(int);
+    hit_blocks: [..] Block_Info;
+}
+Block_Info :: struct {
+    hit_id: Hit_ID;
+    end_time: float64;
+}
+make_block :: (hit_id: Hit_ID, end_time: float64) -> Block_Info {
+    block: Block_Info;
+    block.hit_id = hit_id;
+    block.end_time = end_time;
+    return block;
 }
 
 Stat_Range :: struct(T: Type) {

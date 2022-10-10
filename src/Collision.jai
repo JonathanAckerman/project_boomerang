@@ -18,16 +18,20 @@ Rigidbody :: struct {
 Hit :: struct {
     damage: int;
     damage_type: Damage_Type;
+    id: Hit_ID;
+    tick_rate: float64;
 }
 Damage_Type :: enum {
     NORMAL;
     FIRE;
     OCCULT;
 }
-make_hit :: (damage: int, damage_type: Damage_Type = .NORMAL) -> Hit {
+make_hit :: (id: Hit_ID, damage: int, damage_type: Damage_Type = .NORMAL, tick_rate: float64) -> Hit {
     hit: Hit;
     hit.damage = damage;
     hit.damage_type = damage_type;
+    hit.id = id;
+    hit.tick_rate = tick_rate;
     return hit;
 }
 
@@ -35,7 +39,7 @@ Hitbox :: struct {
     using #as collider: Collider;
     owner: *void;
     hit: Hit;
-    // on_hit_landed maybe? needs to feedback details of the hit/hurt
+    // on_hit_landed maybe? in order to feedback details of the hit/hurt
 }
 produce_hitbox :: (collider: Collider, owner: *void, hit: Hit) {
     hitbox: Hitbox;
