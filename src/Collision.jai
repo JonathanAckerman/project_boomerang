@@ -12,6 +12,7 @@ Collider_Shape :: enum { CIRCLE; RECT; }
 Rigidbody :: struct {
     is_static := true;
     mass := 999;
+    is_ghost := false;
 }
 
 Hit :: struct {

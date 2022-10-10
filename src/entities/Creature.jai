@@ -73,8 +73,14 @@ simulate :: (using creature: *Creature) {
     }
 
     // @TEMP: for now make the physics collidebox also be the hurtbox
-    hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
-    produce_hurtbox(collider, *hurtable, creature, hit_response);
+    if creature.type == .SMALL_FRY then print("%\n", hurtable.iframe_timer);
+    if hurtable.iframe_timer <= 0.0 {
+        hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
+        produce_hurtbox(collider, *hurtable, creature, hit_response);
+    }
+    else {
+        hurtable.iframe_timer -= game.dt;
+    }
 
     // respond to Attack input
     if try_attack {
@@ -103,7 +109,8 @@ simulate :: (using creature: *Creature) {
                 if length(boomerang.position - boomerang.goal_position) < 10.0 {
                     boomerang.status = .RETURNING;
                 }
-                produce_collidebox(boomerang.collidebox.collider, creature, boomerang_on_collision);
+
+                produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
             } 
             
             if boomerang.status == .RETURNING {
@@ -116,7 +123,9 @@ simulate :: (using creature: *Creature) {
 
             if boomerang.status != .SHEATHED {
                 for boomerang.animation.frames {
-                    for it.hitboxes produce_hitbox(it.collider, creature, it.hit);
+                    // for it.hitboxes produce_hitbox(it.collider, creature, it.hit);
+                    // @TEMP: use collidebox for hitbox
+                    produce_hitbox(boomerang.collidebox.collider, creature, make_hit(1));
                 }
                 boomerang.collidebox.position = boomerang.position;
             }
@@ -140,6 +149,7 @@ render :: (using creature: *Creature) {
 creature_on_collision :: (owner: *void, collision: Collision) {
     owner_creature := (cast(*Creature) owner);
     other_creature := (cast(*Creature) collision.other);
+
     if owner_creature.has_rigidbody && other_creature.has_rigidbody {
         if owner_creature.rigidbody.mass < other_creature.rigidbody.mass
             then owner_creature.position += collision.projection;
@@ -148,7 +158,6 @@ creature_on_collision :: (owner: *void, collision: Collision) {
     }
 }
 creature_on_collision_started :: (owner: *void, collision: Collision) {
-    print("RUDE!\n");
 }
 
 // Archetypes -----------------------------------------------------------------------
@@ -171,9 +180,9 @@ Creatures: struct {
         health = .{min=0, max=1, cur=1},
         type = .SMALL_FRY,
         has_ai = true,
-        collider.radius = 12.0,
         has_collider = true,
         mass = 50,
+        collider.radius = 12.0,
         has_rigidbody = true,
         rigidbody.is_static = false,
     };
@@ -183,8 +192,11 @@ Creatures: struct {
         health = .{min=0, max=2, cur=2},
         type = .MEDIUM_FRY,
         has_ai = true,
-        collider.radius = 20.0,
         has_collider = true,
+        mass = 100,
+        collider.radius = 20.0,
+        has_rigidbody = true,
+        rigidbody.is_static = false,
     };
     BIG_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=5.0, cur=1.0},
