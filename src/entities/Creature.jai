@@ -58,10 +58,10 @@ Creature_Type :: enum {
 simulate :: (using creature: *Creature) {
     if game.paused then return;
 
-    // if hurtable.health.cur <= 0 {
-    //     despawn(get_handle(creature));
-    //     return;
-    // }
+    if hurtable.health.cur <= 0 {
+        despawn(creature);
+        return;
+    }
 
     alignment := dot(forward, forward_intended);
     if has_ai {
