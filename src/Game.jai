@@ -15,6 +15,8 @@ game: struct {
         hurtboxes: [..] Hurtbox;
         collideboxes: [..] Collidebox;
     }
+
+    map: Texture;
 }
 
 Game_State :: enum {
@@ -37,7 +39,9 @@ game_loop :: inline () {
     BeginDrawing();
 
     ClearBackground(DARKGRAY);
+    DrawTextureV(map, world_to_screen(.{0,0}), WHITE);
 
+    for _Wall     render(it);
     for _Creature render(it);
 
     DrawFPS(0, 0);
@@ -66,6 +70,7 @@ game_reset :: () {
     array_reserve(*game.collision_system.hitboxes, 1024);
     array_reserve(*game.collision_system.hurtboxes, 1024);
     array_reserve(*game.collision_system.collideboxes, 1024);
+    map = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/grass.png");
 
     // init creatures
     {
@@ -97,12 +102,25 @@ game_reset :: () {
         array_add(*c.animations, NewAnimation("big_fry/idle"));
         spawn(c);
     }
+
+    // init walls
+    {
+        w: Wall;
+        w.position = .{400, 400};
+        array_add(*w.animations, NewAnimation("wall/idle"));
+        w.has_collider = true;
+        w.collider.shape = .RECT;
+        w.collider.size = .{100, 100};
+        w.has_rigidbody = true;
+        spawn(w);
+    }
 }
 
 simulate :: () {
     using game;
     using context.entity_storage;
     
+    for _Wall     simulate(it);
     for _Creature simulate(it);
 
     player_obj, _ := from_handle(player); 

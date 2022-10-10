@@ -4,7 +4,7 @@ Entity :: struct {
     move_speed: Stat_Range(float);
     position: Vector2;
     velocity: Vector2;
-    forward: Vector2;
+    forward: Vector2 = .{0, -1};
     forward_intended: Vector2;
     animations: [..] Animation;
     has_collider := false;
