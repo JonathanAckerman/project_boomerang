@@ -135,9 +135,6 @@ player_on_hit :: (hurtable: *Hurtable, hit: Hit) {
     }
 }
 enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
-    if hurtable.iframe_timer > 0.0 return;
-    hurtable.iframe_timer = hurtable.iframe_duration;
-
     log("Enemy is being damaged for %", hit.damage);
     if hurtable.health.cur > hurtable.health.min then hurtable.health.cur -= hit.damage;
     if hurtable.health.cur <= 0 {
@@ -151,7 +148,4 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
 
     weapon := cast(*Weapon) owner;
     if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .RETURNING;
-}
-boomerang_on_hit :: (hurtable: *Hurtable, hit: Hit) {
-    log("The boomerang hit something!"); // note "hit" != "collide"
 }

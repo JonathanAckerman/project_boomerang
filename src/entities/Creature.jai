@@ -73,14 +73,8 @@ simulate :: (using creature: *Creature) {
     }
 
     // @TEMP: for now make the physics collidebox also be the hurtbox
-    if creature.type == .SMALL_FRY then print("%\n", hurtable.iframe_timer);
-    if hurtable.iframe_timer <= 0.0 {
-        hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
-        produce_hurtbox(collider, *hurtable, creature, hit_response);
-    }
-    else {
-        hurtable.iframe_timer -= game.dt;
-    }
+    hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
+    produce_hurtbox(collider, *hurtable, creature, hit_response);
 
     // respond to Attack input
     if try_attack {

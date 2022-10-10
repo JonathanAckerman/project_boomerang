@@ -15,8 +15,6 @@ Entity :: struct {
 
 Hurtable :: struct {
     health: Stat_Range(int);
-    iframe_duration := 2.0;
-    iframe_timer := 0.0;
 }
 
 Stat_Range :: struct(T: Type) {
