@@ -29,6 +29,7 @@ the_font: Font;
 #load "Graphics.jai";
 #load "AI.jai";
 #load "Collision.jai";
+#load "Particles.jai";
 
 #import "Math";
 #import "Basic";

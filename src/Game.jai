@@ -30,6 +30,20 @@ game: struct {
     map: Texture;
 
     test_trigger: Trigger;
+
+    test_particle_emitter: Particle_Emitter = .{
+        is_active=false,
+        position=.{-100, -100}, 
+        size=.{100, 100}, 
+        max_particles=100,
+        spawn_interval=.01, 
+        spawn_timer=0.0, 
+        decay_interval=1.0, 
+        start_scale=0.5,
+        end_scale=1.0,
+        start_color=WHITE,
+        end_color=GRAY,
+    };
 }
 Trigger :: struct {
     is_active := true;
@@ -80,6 +94,8 @@ game_loop :: inline () {
         DrawTextPro(the_font, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx the_font.baseSize, 1, WHITE);
     }
 
+    render(test_particle_emitter);
+
     if debug {
         using collision_system;
         draw_colliders(hitboxes,      RED);
@@ -126,6 +142,10 @@ game_reset :: () {
     array_reserve(*game.collision_system.hurtboxes, 1024);
     array_reserve(*game.collision_system.collideboxes, 1024);
     map = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/grass.png");
+
+    // test particle system
+    array_reserve(*test_particle_emitter.particles, test_particle_emitter.max_particles);
+    test_particle_emitter.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
 
     // init creatures
     {
@@ -178,6 +198,9 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("small_fry/idle"));
     spawn(c);
+    game.test_particle_emitter.is_active=true;
+    game.test_particle_emitter.position=c.position;
+    game.test_particle_emitter.deactivate_timer=1.0;
 
     c = Creatures.MEDIUM_FRY;
     c.position = .{700, 800};
@@ -209,6 +232,9 @@ simulate :: () {
     
     for _Wall     simulate(it);
     for _Creature simulate(it);
+
+    emit(*test_particle_emitter);
+    simulate(*test_particle_emitter);
 
     player_obj, _ := from_handle(player); 
     camera.position = player_obj.position;
