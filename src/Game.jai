@@ -32,7 +32,7 @@ game: struct {
 }
 Trigger :: struct {
     is_active := true;
-    using #as collider: Collider = .{shape=.RECT, position=.{400, 500}, size=.{100, 100}};
+    using #as collider: Collider = .{shape=.RECT, position=.{480, 500}, size=.{10, 100}};
 }
 
 frame: struct {
@@ -149,19 +149,19 @@ game_reset :: () {
         w.has_rigidbody = true;
         spawn(w);
 
-        for i: 0..10 {
+        for i: 0..8 {
             w.position.x += 100;
             spawn(w);
         }
-        for i: 0..10 {
+        for i: 0..8 {
             w.position.y += 100;
             spawn(w);
         }
-        for i: 0..10 {
+        for i: 0..8 {
             w.position.x -= 100;
             spawn(w);
         }
-        for i: 0..8 {
+        for i: 0..6 {
             w.position.y -= 100;
             spawn(w);
         }
@@ -186,6 +186,15 @@ spawn_mobs :: (catalyst: Catalystbox, trigger: Triggerbox) {
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("big_fry/idle"));
     spawn(c);
+
+    w: Wall;
+    w.position = .{400, 500};
+    array_add(*w.animations, NewAnimation("wall/idle"));
+    w.has_collider = true;
+    w.collider.shape = .RECT;
+    w.collider.size = .{100, 100};
+    w.has_rigidbody = true;
+    spawn(w);
 
     (cast(*Trigger) trigger.owner).is_active = false;
 }
