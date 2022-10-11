@@ -103,7 +103,7 @@ update_animation :: (using anim: *Animation)
         frame_timer = duration/frames.count;
         current_frame += 1;
     }
-    else frame_timer -= game.dt;
+    else frame_timer -= frame.dt;
 
     if current_frame >= frames.count {
         if should_loop then current_frame = 0;

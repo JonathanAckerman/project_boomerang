@@ -66,12 +66,12 @@ simulate :: (using creature: *Creature) {
     alignment := dot(forward, forward_intended);
     if has_ai {
         update_ai(creature);
-        forward = lerp(forward, forward_intended, rotation_speed.cur * game.dt);
+        forward = lerp(forward, forward_intended, rotation_speed.cur * frame.dt);
     }
     else forward = forward_intended;
 
     if dot(forward, forward_intended) > 0.8
-        then position += velocity * game.dt;
+        then position += velocity * frame.dt;
 
     // @Jay: figure out sequencing for taking damage (if the creature dies) and collision resolution
     if has_collider {
@@ -82,7 +82,7 @@ simulate :: (using creature: *Creature) {
     // @TEMP: for now make the physics collidebox also be the hurtbox
     hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
     produce_hurtbox(collider, *hurtable, creature, hit_response);
-    for hurtable.hit_blocks if GetTime() >= it.end_time then remove it;
+    for hurtable.hit_blocks if frame.time >= it.end_time then remove it;
 
     // respond to Attack input
     if try_attack {
@@ -108,7 +108,7 @@ simulate :: (using creature: *Creature) {
             if boomerang.status == .LEAVING {    
                 displacement_vector := boomerang.position - boomerang.rotation_point;
                 angular_speed := boomerang.move_speed / length(displacement_vector);
-                boomerang.position = boomerang.rotation_point + rotate_vector(displacement_vector, -angular_speed * game.dt);
+                boomerang.position = boomerang.rotation_point + rotate_vector(displacement_vector, -angular_speed * frame.dt);
 
                 if length(boomerang.position - boomerang.goal_position) < 10.0 {
                     boomerang.status = .RETURNING;
@@ -120,7 +120,7 @@ simulate :: (using creature: *Creature) {
             
             if boomerang.status == .RETURNING {
                 direction := position - boomerang.position;
-                boomerang.position += unit_vector(direction) * boomerang.move_speed * game.dt;
+                boomerang.position += unit_vector(direction) * boomerang.move_speed * frame.dt;
                 if length(boomerang.position - position) < 10.0 {
                     boomerang.status = .SHEATHED;
                 }

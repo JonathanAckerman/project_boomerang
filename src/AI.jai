@@ -43,7 +43,7 @@ update_ai :: (using creature: *Creature) {
                 ai.has_goal = true;
             }
             else {
-                ai.goal_reset_timer -= game.dt;
+                ai.goal_reset_timer -= frame.dt;
             }
         }
     }

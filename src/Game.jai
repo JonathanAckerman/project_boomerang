@@ -4,7 +4,6 @@ game: struct {
     resetting: bool;
     paused: bool;
     state: Game_State;
-    dt: float;
 
     player: Handle(Creature);
     camera: struct {
@@ -24,6 +23,11 @@ game: struct {
     map: Texture;
 }
 
+frame: struct {
+    dt: float;
+    time: float64;
+}
+
 Game_State :: enum {
     INITIAL;
 }
@@ -31,7 +35,8 @@ Game_State :: enum {
 game_loop :: inline () {
     using game;
     using context.entity_storage;
-    dt = GetFrameTime();
+    frame.time = GetTime();
+    frame.dt = GetFrameTime();
 
     // simulate ----------------------------------------------------------------
     handle_input();
