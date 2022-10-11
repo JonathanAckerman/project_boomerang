@@ -87,6 +87,30 @@ produce_collidebox :: (collider: Collider,
     array_add(*game.collision_system.collideboxes, collidebox);
 }
 
+Catalystbox :: struct {
+    using #as collider: Collider;
+    owner: *void;
+}
+produce_catalystbox :: (collider: Collider, owner: *void) {
+    catalystbox: Catalystbox;
+    catalystbox.collider = collider;
+    catalystbox.owner = owner;
+    array_add(*game.collision_system.catalystboxes, catalystbox);
+}
+
+Triggerbox :: struct {
+    using #as collider: Collider;
+    owner: *void;
+    on_trigger: (Catalystbox, Triggerbox);
+}
+produce_triggerbox :: (collider: Collider, owner: *void, on_trigger: (Catalystbox, Triggerbox)) {
+    triggerbox: Triggerbox;
+    triggerbox.collider = collider;
+    triggerbox.owner = owner;
+    triggerbox.on_trigger = on_trigger;
+    array_add(*game.collision_system.triggerboxes, triggerbox);
+}
+
 handle_collision :: () {
     using game.collision_system;
 
@@ -116,8 +140,16 @@ handle_collision :: () {
         for * hurtbox: hurtboxes {
             if hitbox.owner == hurtbox.owner || !hurtbox.on_hit continue;
             if check_hit(hitbox, hurtbox) {
-                if hurtbox.on_hit then hurtbox.on_hit(hurtbox.hurtable, hitbox.hit);
-                else log("no on_hit defined!!");
+                hurtbox.on_hit(hurtbox.hurtable, hitbox.hit);
+            }
+        }
+    }
+
+    for * catalyst: catalystboxes {
+        for * trigger: triggerboxes {
+            if catalyst.owner == trigger.owner || !trigger.on_trigger continue;
+            if check_intersection(catalyst, trigger) {
+                trigger.on_trigger(catalyst, trigger);
             }
         }
     }

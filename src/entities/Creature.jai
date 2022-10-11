@@ -68,7 +68,10 @@ simulate :: (using creature: *Creature) {
         update_ai(creature);
         forward = lerp(forward, forward_intended, rotation_speed.cur * frame.dt);
     }
-    else forward = forward_intended;
+    else {
+        forward = forward_intended;
+        produce_catalystbox(collider, creature);
+    }
 
     if dot(forward, forward_intended) > 0.8
         then position += velocity * frame.dt;

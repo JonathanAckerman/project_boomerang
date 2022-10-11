@@ -13,15 +13,25 @@ game: struct {
     }
 
     collision_system: struct {
-        hitboxes: [..] Hitbox;
+        hitboxes:  [..] Hitbox;
         hurtboxes: [..] Hurtbox;
+
         collideboxes: [..] Collidebox;
+        
+        catalystboxes: [..] Catalystbox;
+        triggerboxes:  [..] Triggerbox;
     }
 
     _hit_id: Hit_ID;
     get_next_hit_id :: () -> Hit_ID { game._hit_id += 1; return game._hit_id; }
 
     map: Texture;
+
+    test_trigger: Trigger;
+}
+Trigger :: struct {
+    is_active := true;
+    using #as collider: Collider = .{shape=.RECT, position=.{400, 500}, size=.{100, 100}};
 }
 
 frame: struct {
@@ -44,6 +54,10 @@ game_loop :: inline () {
 
     simulate();
 
+    if test_trigger.is_active {
+        produce_triggerbox(test_trigger, *test_trigger, spawn_mobs);
+    }
+
     handle_collision();
 
     // draw --------------------------------------------------------------------
@@ -64,34 +78,23 @@ game_loop :: inline () {
     }
 
     if debug {
-        for collision_system.hitboxes {
-            ss_pos := world_to_screen(it.position);
-            if it.shape == {
-                case .CIRCLE;
-                    DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, RED);
-                case .RECT;
-                    ss_pos -= it.size/2.0;
-                    DrawRectangleLines(xx ss_pos.x, xx ss_pos.y, xx it.size.x, xx it.size.y, RED);
-            }
-        }
-        for collision_system.hurtboxes {
-            ss_pos := world_to_screen(it.position);
-            if it.shape == {
-                case .CIRCLE;
-                    DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, BLUE);
-                case .RECT;
-                    ss_pos -= it.size/2.0;
-                    DrawRectangleLines(xx ss_pos.x, xx ss_pos.y, xx it.size.x, xx it.size.y, BLUE);
-            }
-        }   
-        for collision_system.collideboxes {
-            ss_pos := world_to_screen(it.position);
-            if it.shape == {
-                case .CIRCLE;
-                    DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, YELLOW);
-                case .RECT;
-                    ss_pos -= it.size/2.0;
-                    DrawRectangleLines(xx ss_pos.x, xx ss_pos.y, xx it.size.x, xx it.size.y, YELLOW);
+        using collision_system;
+        draw_colliders(hitboxes,      RED);
+        draw_colliders(hurtboxes,     BLUE);
+        draw_colliders(collideboxes,  YELLOW);
+        draw_colliders(catalystboxes, BLACK);
+        draw_colliders(triggerboxes,  WHITE);
+
+        draw_colliders :: (array: [] $T, color: Color) #expand {
+            for array {
+                ss_pos := world_to_screen(it.position);
+                if it.shape == {
+                    case .CIRCLE;
+                        DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, color);
+                    case .RECT;
+                        ss_pos -= it.size/2.0;
+                        DrawRectangleLines(xx ss_pos.x, xx ss_pos.y, xx it.size.x, xx it.size.y, color);
+                }
             }
         }
     }
@@ -102,6 +105,8 @@ game_loop :: inline () {
     array_reset_keeping_memory(*collision_system.hitboxes);
     array_reset_keeping_memory(*collision_system.hurtboxes);
     array_reset_keeping_memory(*collision_system.collideboxes);
+    array_reset_keeping_memory(*collision_system.catalystboxes);
+    array_reset_keeping_memory(*collision_system.triggerboxes);
 
     cleanup_despawning_entities();
     reset_temporary_storage();
@@ -130,24 +135,6 @@ game_reset :: () {
         c.weapon.boomerang.animation.should_loop = true;
         c.weapon.boomerang.collidebox.radius = 50.0;
         player = spawn(c);
-
-        c = Creatures.SMALL_FRY;
-        c.position = .{300, 300};
-        c.collider.position = c.position;
-        array_add(*c.animations, NewAnimation("small_fry/idle"));
-        spawn(c);
-
-        c = Creatures.MEDIUM_FRY;
-        c.position = .{500, 400};
-        c.collider.position = c.position;
-        array_add(*c.animations, NewAnimation("medium_fry/idle"));
-        spawn(c);
-
-        c = Creatures.BIG_FRY;
-        c.position = .{700, 500};
-        c.collider.position = c.position;
-        array_add(*c.animations, NewAnimation("big_fry/idle"));
-        spawn(c);
     }
 
     // init walls
@@ -160,7 +147,46 @@ game_reset :: () {
         w.collider.size = .{100, 100};
         w.has_rigidbody = true;
         spawn(w);
+
+        for i: 0..10 {
+            w.position.x += 100;
+            spawn(w);
+        }
+        for i: 0..10 {
+            w.position.y += 100;
+            spawn(w);
+        }
+        for i: 0..10 {
+            w.position.x -= 100;
+            spawn(w);
+        }
+        for i: 0..8 {
+            w.position.y -= 100;
+            spawn(w);
+        }
     }
+}
+
+spawn_mobs :: (catalyst: Catalystbox, trigger: Triggerbox) {
+    c := Creatures.SMALL_FRY;
+    c.position = .{700, 700};
+    c.collider.position = c.position;
+    array_add(*c.animations, NewAnimation("small_fry/idle"));
+    spawn(c);
+
+    c = Creatures.MEDIUM_FRY;
+    c.position = .{700, 800};
+    c.collider.position = c.position;
+    array_add(*c.animations, NewAnimation("medium_fry/idle"));
+    spawn(c);
+
+    c = Creatures.BIG_FRY;
+    c.position = .{700, 900};
+    c.collider.position = c.position;
+    array_add(*c.animations, NewAnimation("big_fry/idle"));
+    spawn(c);
+
+    (cast(*Trigger) trigger.owner).is_active = false;
 }
 
 simulate :: () {
