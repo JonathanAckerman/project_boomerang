@@ -3,7 +3,7 @@ Wall :: struct {
 }
 
 simulate :: (using wall: *Wall) {
-    if game.paused then return;
+    if game.paused || game.is_gameplay_paused() return;
 
     if has_collider {
         collider.position = position;

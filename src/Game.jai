@@ -1,11 +1,12 @@
 Hit_ID :: #type,distinct u64;
 
 game: struct {
+    state: Game_State;
     resetting: bool;
     debug:     bool;
     paused:    bool;
-    cutscene:  bool;
-    state: Game_State;
+    gameplay_paused_until: float64; // @Jay: maybe this should be ApolloTime?
+    is_gameplay_paused :: inline () -> bool { return game.gameplay_paused_until > 0.0; }
 
     player: Handle(Creature);
     camera: struct {
@@ -49,6 +50,7 @@ game_loop :: inline () {
     using context.entity_storage;
     frame.time = GetTime();
     frame.dt = GetFrameTime();
+    game.gameplay_paused_until -= frame.dt;
 
     // simulate ----------------------------------------------------------------
     handle_input();
@@ -56,7 +58,7 @@ game_loop :: inline () {
     simulate();
 
     if test_trigger.is_active {
-        produce_triggerbox(test_trigger, *test_trigger, spawn_mobs);
+        produce_triggerbox(test_trigger, *test_trigger, on_trigger_fight);
     }
 
     handle_collision();
@@ -168,7 +170,9 @@ game_reset :: () {
     }
 }
 
-spawn_mobs :: (catalyst: Catalystbox, trigger: Triggerbox) {
+on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
+    game.gameplay_paused_until = 2.0;
+
     c := Creatures.SMALL_FRY;
     c.position = .{700, 700};
     c.collider.position = c.position;
@@ -201,7 +205,6 @@ spawn_mobs :: (catalyst: Catalystbox, trigger: Triggerbox) {
 
 simulate :: () {
     using game;
-    if paused || cutscene return;
     using context.entity_storage;
     
     for _Wall     simulate(it);
