@@ -102,7 +102,7 @@ simulate :: (using creature: *Creature) {
                     boomerang.position = position + forward * 10.0;
                     boomerang.curve.p0 = boomerang.position;
                     boomerang.curve.p3 = position + forward * 510.0;
-                    boomerang.curve.p1 = boomerang.curve.p0 + rotate_vector(forward, PI/2.0) * 250.0;
+                    boomerang.curve.p1 = boomerang.curve.p0 + rotate_vector(forward, PI/4.0) * 150.0;
                     boomerang.curve.p2 = boomerang.curve.p3 + rotate_vector(forward, PI/2.0) * 250.0;
                     boomerang.hit_id = game.get_next_hit_id();
                 }
