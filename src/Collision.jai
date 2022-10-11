@@ -121,10 +121,6 @@ handle_collision :: () {
             }
         }
     }
-
-    array_reset_keeping_memory(*hitboxes);
-    array_reset_keeping_memory(*hurtboxes);
-    array_reset_keeping_memory(*collideboxes);
 }
 
 check_collision :: (a: *Collidebox, b: *Collidebox) -> bool, Collision {

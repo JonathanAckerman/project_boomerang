@@ -2,7 +2,8 @@ Hit_ID :: #type,distinct u64;
 
 game: struct {
     resetting: bool;
-    paused: bool;
+    debug:     bool;
+    paused:    bool;
     state: Game_State;
 
     player: Handle(Creature);
@@ -62,10 +63,46 @@ game_loop :: inline () {
         DrawTextPro(the_font, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx the_font.baseSize, 1, WHITE);
     }
 
+    if debug {
+        for collision_system.hitboxes {
+            ss_pos := world_to_screen(it.position);
+            if it.shape == {
+                case .CIRCLE;
+                    DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, RED);
+                case .RECT;
+                    ss_pos -= it.size/2.0;
+                    DrawRectangleLines(xx ss_pos.x, xx ss_pos.y, xx it.size.x, xx it.size.y, RED);
+            }
+        }
+        for collision_system.hurtboxes {
+            ss_pos := world_to_screen(it.position);
+            if it.shape == {
+                case .CIRCLE;
+                    DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, BLUE);
+                case .RECT;
+                    ss_pos -= it.size/2.0;
+                    DrawRectangleLines(xx ss_pos.x, xx ss_pos.y, xx it.size.x, xx it.size.y, BLUE);
+            }
+        }   
+        for collision_system.collideboxes {
+            ss_pos := world_to_screen(it.position);
+            if it.shape == {
+                case .CIRCLE;
+                    DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, YELLOW);
+                case .RECT;
+                    ss_pos -= it.size/2.0;
+                    DrawRectangleLines(xx ss_pos.x, xx ss_pos.y, xx it.size.x, xx it.size.y, YELLOW);
+            }
+        }
+    }
+
     EndDrawing();
 
-
     // cleanup -----------------------------------------------------------------
+    array_reset_keeping_memory(*collision_system.hitboxes);
+    array_reset_keeping_memory(*collision_system.hurtboxes);
+    array_reset_keeping_memory(*collision_system.collideboxes);
+
     cleanup_despawning_entities();
     reset_temporary_storage();
 }
