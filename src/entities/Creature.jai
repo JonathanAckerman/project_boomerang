@@ -21,8 +21,7 @@ Weapon :: struct {
                 RETURNING;
             }
             position: Vector2;
-            goal_position: Vector2;
-            rotation_point: Vector2;
+            curve: Bezier_Cubic;
             move_speed := 500.0;
             collidebox: Collidebox;
             hit_id: Hit_ID;
@@ -39,6 +38,14 @@ Weapon :: struct {
 
         }
     }
+}
+
+Bezier_Cubic :: struct {
+    p0: Vector2;
+    p1: Vector2;
+    p2: Vector2;
+    p3: Vector2;
+    t: float = 0.0;
 }
 
 Weapon_Type :: enum {
@@ -93,8 +100,10 @@ simulate :: (using creature: *Creature) {
                 if boomerang.status == .SHEATHED {
                     boomerang.status = .LEAVING;
                     boomerang.position = position + forward * 10.0;
-                    boomerang.goal_position = position + forward * 610.0;
-                    boomerang.rotation_point = position + forward * 310.0;
+                    boomerang.curve.p0 = boomerang.position;
+                    boomerang.curve.p3 = position + forward * 510.0;
+                    boomerang.curve.p1 = boomerang.curve.p0 + rotate_vector(forward, PI/2.0) * 250.0;
+                    boomerang.curve.p2 = boomerang.curve.p3 + rotate_vector(forward, PI/2.0) * 250.0;
                     boomerang.hit_id = game.get_next_hit_id();
                 }
         }
@@ -106,14 +115,25 @@ simulate :: (using creature: *Creature) {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
             
-            if boomerang.status == .LEAVING {    
-                displacement_vector := boomerang.position - boomerang.rotation_point;
-                angular_speed := boomerang.move_speed / length(displacement_vector);
-                boomerang.position = boomerang.rotation_point + rotate_vector(displacement_vector, -angular_speed * frame.dt);
+            if boomerang.status == .LEAVING {
+                DrawCircleV(world_to_screen(boomerang.curve.p0), 3.0, PURPLE);
+                DrawCircleV(world_to_screen(boomerang.curve.p1), 3.0, PURPLE);
+                DrawCircleV(world_to_screen(boomerang.curve.p2), 3.0, PURPLE);
+                DrawCircleV(world_to_screen(boomerang.curve.p3), 3.0, PURPLE);
+                boomerang.curve.t += frame.dt;
+                {
+                    t := boomerang.curve.t/1.5;
+                    p0_component := boomerang.curve.p0 * ((-t*t*t) + (3.0*t*t) - (3.0*t) + 1.0);
+                    p1_component := boomerang.curve.p1 * ((3.0*t*t*t) - (6.0*t*t) + (3.0*t));
+                    p2_component := boomerang.curve.p2 * ((-3.0*t*t*t) + (3.0*t*t));
+                    p3_component := boomerang.curve.p3 * (t*t*t);
+                    boomerang.position = p0_component + p1_component + p2_component + p3_component;
+                }
 
-                if length(boomerang.position - boomerang.goal_position) < 10.0 {
+                if length(boomerang.position - boomerang.curve.p3) < 10.0 {
                     boomerang.status = .RETURNING;
                     boomerang.hit_id = game.get_next_hit_id();
+                    weapon.boomerang.curve.t = 0.0;
                 }
 
                 produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
