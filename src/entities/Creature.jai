@@ -56,8 +56,6 @@ Creature_Type :: enum {
 }
 
 simulate :: (using creature: *Creature) {
-    if game.paused then return;
-
     if hurtable.health.cur <= 0 {
         despawn(creature);
         return;

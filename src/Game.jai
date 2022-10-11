@@ -4,6 +4,7 @@ game: struct {
     resetting: bool;
     debug:     bool;
     paused:    bool;
+    cutscene:  bool;
     state: Game_State;
 
     player: Handle(Creature);
@@ -191,6 +192,7 @@ spawn_mobs :: (catalyst: Catalystbox, trigger: Triggerbox) {
 
 simulate :: () {
     using game;
+    if paused || cutscene return;
     using context.entity_storage;
     
     for _Wall     simulate(it);
