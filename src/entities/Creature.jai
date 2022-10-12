@@ -111,12 +111,16 @@ simulate :: (using creature: *Creature) {
                     boomerang.curve.p1 = boomerang.curve.p0 + rotate_vector(attack_forward, PI/4.0) * 150.0;
                     boomerang.curve.p2 = boomerang.curve.p3 + rotate_vector(attack_forward, PI/2.0) * 250.0;
                     boomerang.hit_id = game.get_next_hit_id();
-
                     game.test_particle_emitter4.is_active = true;
+                }
+                else {
+                    // @TODO: nerf this with a delay Action
+                    boomerang.status = .SHEATHED;
+                    game.test_particle_emitter4.is_active = false;
+                    boomerang.curve = .{};
                 }
         }
     }
-    // maybe also have an input to call the boomerang back?
 
     // update attack
     if weapon.type == {
