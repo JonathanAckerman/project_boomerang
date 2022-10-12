@@ -217,6 +217,12 @@ game_reset :: () {
         c.weapon.boomerang.animation = NewAnimation("boomerang/spin");
         c.weapon.boomerang.animation.should_loop = true;
         c.weapon.boomerang.collidebox.radius = 50.0;
+
+        attack_forward := ifx c.weapon.boomerang.forward != .{0, 0} then c.weapon.boomerang.forward else c.forward;
+        c.weapon.boomerang.curve.p0 = c.position + c.forward * 10.0;
+        c.weapon.boomerang.curve.p3 = c.position + attack_forward * 510.0;
+        c.weapon.boomerang.curve.p1 = c.weapon.boomerang.curve.p0 + rotate_vector(attack_forward, PI/4.0) * 150.0;
+        c.weapon.boomerang.curve.p2 = c.weapon.boomerang.curve.p3 + rotate_vector(attack_forward, PI/2.0) * 250.0;
         player = spawn(c);
     }
 
