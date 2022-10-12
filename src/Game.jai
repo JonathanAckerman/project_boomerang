@@ -31,9 +31,32 @@ game: struct {
 
     test_trigger: Trigger;
 
-    test_particle_emitter: Particle_Emitter = .{
+    test_particle_emitter1: Particle_Emitter = .{
         is_active=false,
-        position=.{-100, -100}, 
+        size=.{50, 50}, 
+        max_particles=100,
+        spawn_interval=.01, 
+        spawn_timer=0.0, 
+        decay_interval=1.0, 
+        start_scale=0.1,
+        end_scale=0.3,
+        start_color=WHITE,
+        end_color=GRAY,
+    };
+    test_particle_emitter2: Particle_Emitter = .{
+        is_active=false,
+        size=.{50, 50}, 
+        max_particles=100,
+        spawn_interval=.01, 
+        spawn_timer=0.0, 
+        decay_interval=1.0, 
+        start_scale=0.2,
+        end_scale=0.6,
+        start_color=WHITE,
+        end_color=GRAY,
+    };
+    test_particle_emitter3: Particle_Emitter = .{
+        is_active=false,
         size=.{100, 100}, 
         max_particles=100,
         spawn_interval=.01, 
@@ -94,7 +117,9 @@ game_loop :: inline () {
         DrawTextPro(the_font, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx the_font.baseSize, 1, WHITE);
     }
 
-    render(test_particle_emitter);
+    render(test_particle_emitter1);
+    render(test_particle_emitter2);
+    render(test_particle_emitter3);
 
     if debug {
         using collision_system;
@@ -144,8 +169,12 @@ game_reset :: () {
     map = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/grass.png");
 
     // test particle system
-    array_reserve(*test_particle_emitter.particles, test_particle_emitter.max_particles);
-    test_particle_emitter.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
+    array_reserve(*test_particle_emitter1.particles, test_particle_emitter1.max_particles);
+    test_particle_emitter1.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
+    array_reserve(*test_particle_emitter2.particles, test_particle_emitter2.max_particles);
+    test_particle_emitter2.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
+    array_reserve(*test_particle_emitter3.particles, test_particle_emitter3.max_particles);
+    test_particle_emitter3.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
 
     // init creatures
     {
@@ -198,21 +227,27 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("small_fry/idle"));
     spawn(c);
-    game.test_particle_emitter.is_active=true;
-    game.test_particle_emitter.position=c.position;
-    game.test_particle_emitter.deactivate_timer=1.0;
+    game.test_particle_emitter1.is_active=true;
+    game.test_particle_emitter1.position=c.position;
+    game.test_particle_emitter1.deactivate_timer=1.0;
 
     c = Creatures.MEDIUM_FRY;
-    c.position = .{700, 800};
+    c.position = .{800, 700};
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("medium_fry/idle"));
     spawn(c);
+    game.test_particle_emitter2.is_active=true;
+    game.test_particle_emitter2.position=c.position;
+    game.test_particle_emitter2.deactivate_timer=1.0;
 
     c = Creatures.BIG_FRY;
-    c.position = .{700, 900};
+    c.position = .{1000, 700};
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("big_fry/idle"));
     spawn(c);
+    game.test_particle_emitter3.is_active=true;
+    game.test_particle_emitter3.position=c.position;
+    game.test_particle_emitter3.deactivate_timer=1.0;
 
     w: Wall;
     w.position = .{400, 500};
@@ -233,8 +268,12 @@ simulate :: () {
     for _Wall     simulate(it);
     for _Creature simulate(it);
 
-    emit(*test_particle_emitter);
-    simulate(*test_particle_emitter);
+        emit(*test_particle_emitter1);
+    simulate(*test_particle_emitter1);
+        emit(*test_particle_emitter2);
+    simulate(*test_particle_emitter2);
+        emit(*test_particle_emitter3);
+    simulate(*test_particle_emitter3);
 
     player_obj, _ := from_handle(player); 
     camera.position = player_obj.position;

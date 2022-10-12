@@ -40,8 +40,8 @@ emit :: (using emitter: *Particle_Emitter) {
                 x := random_get_within_range(position.x - size.x/2.0, position.x + size.x/2.0);
                 y := random_get_within_range(position.y - size.y/2.0, position.y + size.y/2.0);
                 particle.position = xy(x, y);
-                particle.velocity = .{0,-100};
-                particle.acceleration = .{0,-200};
+                particle.velocity = .{0,-50};
+                particle.acceleration = .{0,-100};
                 particle.color = start_color;
                 particle.scale = start_scale;
                 array_add(*particles, particle);
