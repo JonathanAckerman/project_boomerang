@@ -14,6 +14,8 @@ Particle_Emitter :: struct {
     end_color:   Color = WHITE;
     start_scale: float;
     end_scale:   float;
+    start_velocity: Vector2;
+    acceleration:   Vector2;
 
     particles: [..] Particle;
 }
@@ -21,7 +23,6 @@ Particle_Emitter :: struct {
 Particle :: struct {
     position: Vector2;
     velocity: Vector2;
-    acceleration: Vector2;
     color: Color;
     scale: float;
     lifetime: float;
@@ -40,8 +41,7 @@ emit :: (using emitter: *Particle_Emitter) {
                 x := random_get_within_range(position.x - size.x/2.0, position.x + size.x/2.0);
                 y := random_get_within_range(position.y - size.y/2.0, position.y + size.y/2.0);
                 particle.position = xy(x, y);
-                particle.velocity = .{0,-50};
-                particle.acceleration = .{0,-100};
+                particle.velocity = start_velocity;
                 particle.color = start_color;
                 particle.scale = start_scale;
                 array_add(*particles, particle);
@@ -74,7 +74,7 @@ simulate :: (using emitter: *Particle_Emitter) {
             it.scale = lerp(start_scale, end_scale, t);
 
             it.position += it.velocity * frame.dt;
-            it.velocity += it.acceleration * frame.dt;
+            it.velocity += acceleration * frame.dt;
         }
     }
 }

@@ -42,6 +42,8 @@ game: struct {
         end_scale=0.3,
         start_color=WHITE,
         end_color=GRAY,
+        start_velocity=.{0, -50},
+        acceleration=.{0, -50},
     };
     test_particle_emitter2: Particle_Emitter = .{
         is_active=false,
@@ -54,6 +56,8 @@ game: struct {
         end_scale=0.6,
         start_color=WHITE,
         end_color=GRAY,
+        start_velocity=.{0, -50},
+        acceleration=.{0, -1000},
     };
     test_particle_emitter3: Particle_Emitter = .{
         is_active=false,
@@ -66,6 +70,8 @@ game: struct {
         end_scale=1.0,
         start_color=WHITE,
         end_color=GRAY,
+        start_velocity=.{0, -500},
+        acceleration=.{0, 0},
     };
 }
 Trigger :: struct {
