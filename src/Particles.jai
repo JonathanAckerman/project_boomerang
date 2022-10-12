@@ -54,8 +54,8 @@ emit :: (using emitter: *Particle_Emitter) {
 simulate :: (using emitter: *Particle_Emitter) {
     if game.paused return;
 
-    deactivate_timer -= frame.dt;
-    if deactivate_timer <= 0.0 then is_active = false;
+    if deactivate_timer then deactivate_timer -= frame.dt;
+    if deactivate_timer < 0.0 then is_active = false;
 
     for * particles {
         it.lifetime += frame.dt;

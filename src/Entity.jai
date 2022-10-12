@@ -4,8 +4,8 @@ Entity :: struct {
     move_speed: Stat_Range(float);
     position: Vector2;
     velocity: Vector2;
-    forward: Vector2 = .{0, -1};
-    forward_intended: Vector2;
+    forward: Vector2 = .{1, 0};
+    forward_intended: Vector2 = .{1, 0};
     animations: [..] Animation;
     has_collider := false;
     collider: Collider; // @Jay: maybe make this an array, maybe usingas it?

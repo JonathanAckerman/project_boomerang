@@ -107,6 +107,8 @@ simulate :: (using creature: *Creature) {
                     boomerang.curve.p1 = boomerang.curve.p0 + rotate_vector(forward, PI/4.0) * 150.0;
                     boomerang.curve.p2 = boomerang.curve.p3 + rotate_vector(forward, PI/2.0) * 250.0;
                     boomerang.hit_id = game.get_next_hit_id();
+
+                    game.test_particle_emitter4.is_active = true;
                 }
         }
     }
@@ -146,6 +148,7 @@ simulate :: (using creature: *Creature) {
                 boomerang.position += unit_vector(direction) * boomerang.move_speed * frame.dt;
                 if length(boomerang.position - position) < 10.0 {
                     boomerang.status = .SHEATHED;
+                    game.test_particle_emitter4.is_active = false;
                 }
             }
 
@@ -156,6 +159,7 @@ simulate :: (using creature: *Creature) {
                     produce_hitbox(boomerang.collidebox.collider, creature, make_hit(boomerang.hit_id, 1, tick_rate=boomerang.tick_rate));
                 }
                 boomerang.collidebox.position = boomerang.position;
+                game.test_particle_emitter4.position = boomerang.position;
             }
     }
 }

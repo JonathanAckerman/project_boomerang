@@ -24,6 +24,10 @@ game: struct {
         triggerboxes:  [..] Triggerbox;
     }
 
+    particle_system: struct {
+        emitters: [..] Particle_Emitter;
+    }
+
     _hit_id: Hit_ID;
     get_next_hit_id :: () -> Hit_ID { game._hit_id += 1; return game._hit_id; }
 
@@ -71,6 +75,20 @@ game: struct {
         start_color=WHITE,
         end_color=GRAY,
         start_velocity=.{0, -500},
+        acceleration=.{0, 0},
+    };
+    test_particle_emitter4: Particle_Emitter = .{
+        is_active=false,
+        size=.{10, 10}, 
+        max_particles=100,
+        spawn_interval=.01, 
+        spawn_timer=0.0, 
+        decay_interval=0.5, 
+        start_scale=0.5,
+        end_scale=0.1,
+        start_color=GRAY,
+        end_color=WHITE,
+        start_velocity=.{0, 0},
         acceleration=.{0, 0},
     };
 }
@@ -126,6 +144,7 @@ game_loop :: inline () {
     render(test_particle_emitter1);
     render(test_particle_emitter2);
     render(test_particle_emitter3);
+    render(test_particle_emitter4);
 
     if debug {
         using collision_system;
@@ -181,6 +200,8 @@ game_reset :: () {
     test_particle_emitter2.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
     array_reserve(*test_particle_emitter3.particles, test_particle_emitter3.max_particles);
     test_particle_emitter3.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
+    array_reserve(*test_particle_emitter4.particles, test_particle_emitter4.max_particles);
+    test_particle_emitter4.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
 
     // init creatures
     {
@@ -280,6 +301,8 @@ simulate :: () {
     simulate(*test_particle_emitter2);
         emit(*test_particle_emitter3);
     simulate(*test_particle_emitter3);
+        emit(*test_particle_emitter4);
+    simulate(*test_particle_emitter4);
 
     player_obj, _ := from_handle(player); 
     camera.position = player_obj.position;
@@ -307,4 +330,6 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
     if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .RETURNING;
     weapon.boomerang.hit_id = game.get_next_hit_id();
     weapon.boomerang.curve.t = 0.0;
+
+    game.test_particle_emitter4.is_active = false;
 }
