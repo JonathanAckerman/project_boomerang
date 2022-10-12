@@ -23,6 +23,7 @@ Weapon :: struct {
                 RETURNING;
             }
             position: Vector2;
+            forward:  Vector2;
             curve: Bezier_Cubic;
             move_speed := 500.0;
             collidebox: Collidebox;
@@ -103,11 +104,12 @@ simulate :: (using creature: *Creature) {
                 boomerang := *weapon.boomerang;
                 if boomerang.status == .SHEATHED {
                     boomerang.status = .LEAVING;
-                    boomerang.position = position + forward * 10.0;
+                    attack_forward := ifx boomerang.forward != .{0, 0} then boomerang.forward else forward;
+                    boomerang.position = position + attack_forward * 10.0;
                     boomerang.curve.p0 = boomerang.position;
-                    boomerang.curve.p3 = position + forward * 510.0;
-                    boomerang.curve.p1 = boomerang.curve.p0 + rotate_vector(forward, PI/4.0) * 150.0;
-                    boomerang.curve.p2 = boomerang.curve.p3 + rotate_vector(forward, PI/2.0) * 250.0;
+                    boomerang.curve.p3 = position + attack_forward * 510.0;
+                    boomerang.curve.p1 = boomerang.curve.p0 + rotate_vector(attack_forward, PI/4.0) * 150.0;
+                    boomerang.curve.p2 = boomerang.curve.p3 + rotate_vector(attack_forward, PI/2.0) * 250.0;
                     boomerang.hit_id = game.get_next_hit_id();
 
                     game.test_particle_emitter4.is_active = true;

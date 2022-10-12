@@ -2,9 +2,10 @@ input: struct {
     use_gamepad := true;
     gamepad_index: s32;
     gamepad: struct {
-        normal_attack: GamepadButton = .GAMEPAD_BUTTON_RIGHT_FACE_RIGHT;
+        normal_attack: GamepadButton = .GAMEPAD_BUTTON_RIGHT_TRIGGER_1;
         pause:         GamepadButton = .GAMEPAD_BUTTON_MIDDLE_RIGHT;
         movement: Vector2;
+        aim:      Vector2;
         deadzone: float = 0.3;
     }
 }
@@ -29,6 +30,14 @@ handle_input :: inline () {
             player.velocity = gamepad.movement * player.move_speed.cur;
         } else {
             player.velocity = .{0, 0};
+        }
+
+        gamepad.aim.x = GetGamepadAxisMovement(gamepad_index, xx GamepadAxis.GAMEPAD_AXIS_RIGHT_X);
+        gamepad.aim.y = GetGamepadAxisMovement(gamepad_index, xx GamepadAxis.GAMEPAD_AXIS_RIGHT_Y);
+        if length(gamepad.aim) > gamepad.deadzone {
+            player.weapon.boomerang.forward = unit_vector(gamepad.aim);
+        } else {
+            player.weapon.boomerang.forward = .{0, 0};
         }
     } 
     else {
