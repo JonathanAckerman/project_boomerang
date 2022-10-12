@@ -168,8 +168,8 @@ game_loop :: inline () {
         }
 
         player_obj, _ := from_handle(player);
-        curve := player_obj.weapon.boomerang.curve;
-        DrawLineBezierCubic(ss(curve.p0), ss(curve.p3), ss(curve.p1), ss(curve.p2), 1.0, PINK);
+        path := player_obj.weapon.boomerang.path;
+        DrawLineBezierCubic(ss(path.p0), ss(path.p3), ss(path.p1), ss(path.p2), 1.0, PINK);
     }
 
     EndDrawing();
@@ -219,10 +219,10 @@ game_reset :: () {
         c.weapon.boomerang.collidebox.radius = 50.0;
 
         attack_forward := ifx c.weapon.boomerang.forward != .{0, 0} then c.weapon.boomerang.forward else c.forward;
-        c.weapon.boomerang.curve.p0 = c.position + c.forward * 10.0;
-        c.weapon.boomerang.curve.p3 = c.position + attack_forward * 510.0;
-        c.weapon.boomerang.curve.p1 = c.weapon.boomerang.curve.p0 + rotate_vector(attack_forward, PI/4.0) * 150.0;
-        c.weapon.boomerang.curve.p2 = c.weapon.boomerang.curve.p3 + rotate_vector(attack_forward, PI/2.0) * 250.0;
+        c.weapon.boomerang.path.p0 = c.position + c.forward * 10.0;
+        c.weapon.boomerang.path.p3 = c.position + attack_forward * 510.0;
+        c.weapon.boomerang.path.p1 = c.weapon.boomerang.path.p0 + rotate_vector(attack_forward, PI/4.0) * 150.0;
+        c.weapon.boomerang.path.p2 = c.weapon.boomerang.path.p3 + rotate_vector(attack_forward, PI/2.0) * 250.0;
         player = spawn(c);
     }
 
@@ -340,7 +340,7 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
     weapon := cast(*Weapon) owner;
     if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .RETURNING;
     weapon.boomerang.hit_id = game.get_next_hit_id();
-    weapon.boomerang.curve.t = 0.0;
+    weapon.boomerang.path.t = 0.0;
 }
 
 end_arena :: () {

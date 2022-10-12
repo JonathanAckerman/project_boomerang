@@ -34,10 +34,20 @@ handle_input :: inline () {
 
         gamepad.aim.x = GetGamepadAxisMovement(gamepad_index, xx GamepadAxis.GAMEPAD_AXIS_RIGHT_X);
         gamepad.aim.y = GetGamepadAxisMovement(gamepad_index, xx GamepadAxis.GAMEPAD_AXIS_RIGHT_Y);
-        if length(gamepad.aim) > gamepad.deadzone {
-            player.weapon.boomerang.forward = unit_vector(gamepad.aim);
+        player.weapon.boomerang.forward = .{0, 0};
+
+        side := dot(rotate_vector(player.forward, PI/2), gamepad.aim);
+        if side < 0 then side = -1.0;
+        if side > 0 then side = 1.0;
+        player.weapon.boomerang.shot_side = side;
+
+        if dot(gamepad.aim, player.forward) >= 0 {
+            player.weapon.boomerang.use_curve_shot = false;
+            if length(gamepad.aim) > gamepad.deadzone {
+                player.weapon.boomerang.forward = unit_vector(gamepad.aim);
+            }
         } else {
-            player.weapon.boomerang.forward = .{0, 0};
+            player.weapon.boomerang.use_curve_shot = true;
         }
     } 
     else {
