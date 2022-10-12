@@ -74,6 +74,12 @@ simulate :: (using creature: *Creature) {
         return;
     }
 
+    position += velocity * frame.dt;
+    if has_collider {
+        collider.position = position;
+        produce_collidebox(collider, creature, creature_on_collision_started, creature_on_collision);
+    }
+
     alignment := dot(forward, forward_intended);
     if has_ai {
         update_ai(creature);
@@ -84,13 +90,6 @@ simulate :: (using creature: *Creature) {
         produce_catalystbox(collider, creature);
     }
 
-    position += velocity * frame.dt;
-
-    // @Jay: figure out sequencing for taking damage (if the creature dies) and collision resolution
-    if has_collider {
-        collider.position = position;
-        produce_collidebox(collider, creature, creature_on_collision_started, creature_on_collision);
-    }
 
     // @TEMP: for now make the physics collidebox also be the hurtbox
     hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
