@@ -330,6 +330,4 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
     if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .RETURNING;
     weapon.boomerang.hit_id = game.get_next_hit_id();
     weapon.boomerang.curve.t = 0.0;
-
-    game.test_particle_emitter4.is_active = false;
 }
