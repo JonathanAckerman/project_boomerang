@@ -271,6 +271,7 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     c.position = .{1000, 700};
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("big_fry/idle"));
+    c.on_death = end_arena;
     spawn(c);
     game.test_particle_emitter3.is_active=true;
     game.test_particle_emitter3.position=c.position;
@@ -330,4 +331,11 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
     if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .RETURNING;
     weapon.boomerang.hit_id = game.get_next_hit_id();
     weapon.boomerang.curve.t = 0.0;
+}
+
+end_arena :: () {
+    for context.entity_storage._Wall {
+        despawn(it);
+    }
+    game.gameplay_paused_until = 0.5;
 }

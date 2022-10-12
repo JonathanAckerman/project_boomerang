@@ -8,6 +8,8 @@ Creature :: struct {
     ai: AI_Data;
 
     try_attack := false;
+
+    on_death: ()->();
 }
 
 Weapon :: struct {
@@ -67,6 +69,7 @@ simulate :: (using creature: *Creature) {
 
     if hurtable.health.cur <= 0 {
         despawn(creature);
+        if creature.on_death then creature.on_death();
         return;
     }
 
@@ -172,7 +175,7 @@ render :: (using creature: *Creature) {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
             if boomerang.status != .SHEATHED {
-                update_animation(*boomerang.animation);
+                if !game.paused && !game.is_gameplay_paused() then update_animation(*boomerang.animation);
                 draw_texture_centered_with_rotation(Current_Frame(boomerang.animation), world_to_screen(boomerang.position), 0.0);
             }
     }
