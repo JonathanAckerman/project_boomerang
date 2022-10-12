@@ -83,8 +83,7 @@ simulate :: (using creature: *Creature) {
         produce_catalystbox(collider, creature);
     }
 
-    if dot(forward, forward_intended) > 0.8
-        then position += velocity * frame.dt;
+    position += velocity * frame.dt;
 
     // @Jay: figure out sequencing for taking damage (if the creature dies) and collision resolution
     if has_collider {
