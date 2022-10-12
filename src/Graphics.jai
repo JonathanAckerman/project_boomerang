@@ -19,6 +19,7 @@ draw_texture_centered_with_rotation :: (texture: Texture, pos: Vector2, rotation
     DrawTextureEx(texture, drawpos, -rad2deg(rotation), scale, color);
 }
 
+ss :: world_to_screen;
 world_to_screen :: (world: Vector2) -> screen: Vector2 {
     to_ss_vector := WINDOW_CENTER - game.camera.position * game.camera.zoom;
     return world * game.camera.zoom + to_ss_vector;

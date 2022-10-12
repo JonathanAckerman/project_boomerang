@@ -97,6 +97,17 @@ simulate :: (using creature: *Creature) {
     produce_hurtbox(collider, *hurtable, creature, hit_response);
     for hurtable.hit_blocks if frame.time >= it.end_time then remove it;
 
+    // @TEMP: just to see the curve in real time
+    if game.debug && weapon.boomerang.status == .SHEATHED {
+        boomerang := *weapon.boomerang;
+        attack_forward := ifx boomerang.forward != .{0, 0} then boomerang.forward else forward;
+        boomerang.position = position + attack_forward * 10.0;
+        boomerang.curve.p0 = boomerang.position;
+        boomerang.curve.p3 = position + attack_forward * 510.0;
+        boomerang.curve.p1 = boomerang.curve.p0 + rotate_vector(attack_forward, PI/4.0) * 150.0;
+        boomerang.curve.p2 = boomerang.curve.p3 + rotate_vector(attack_forward, PI/2.0) * 250.0;
+    }
+
     // respond to Attack input
     if try_attack {
         if weapon.type == {
@@ -128,10 +139,6 @@ simulate :: (using creature: *Creature) {
             boomerang := *weapon.boomerang;
             
             if boomerang.status == .LEAVING {
-                DrawCircleV(world_to_screen(boomerang.curve.p0), 3.0, PURPLE);
-                DrawCircleV(world_to_screen(boomerang.curve.p1), 3.0, PURPLE);
-                DrawCircleV(world_to_screen(boomerang.curve.p2), 3.0, PURPLE);
-                DrawCircleV(world_to_screen(boomerang.curve.p3), 3.0, PURPLE);
                 boomerang.curve.t += frame.dt;
                 {
                     t := boomerang.curve.t/1.5;

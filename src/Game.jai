@@ -166,6 +166,10 @@ game_loop :: inline () {
                 }
             }
         }
+
+        player_obj, _ := from_handle(player);
+        curve := player_obj.weapon.boomerang.curve;
+        DrawLineBezierCubic(ss(curve.p0), ss(curve.p3), ss(curve.p1), ss(curve.p2), 1.0, PINK);
     }
 
     EndDrawing();
