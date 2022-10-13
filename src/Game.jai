@@ -219,10 +219,18 @@ game_reset :: () {
         c.weapon.boomerang.collidebox.radius = 50.0;
 
         attack_forward := ifx c.weapon.boomerang.forward != .{0, 0} then c.weapon.boomerang.forward else c.forward;
-        c.weapon.boomerang.path.p0 = c.position + c.forward * 10.0;
-        c.weapon.boomerang.path.p3 = c.position + attack_forward * 510.0;
-        c.weapon.boomerang.path.p1 = c.weapon.boomerang.path.p0 + rotate_vector(attack_forward, PI/4.0) * 150.0;
-        c.weapon.boomerang.path.p2 = c.weapon.boomerang.path.p3 + rotate_vector(attack_forward, PI/2.0) * 250.0;
+        p0 := c.position + c.forward * 10.0;
+        p3 := c.position + attack_forward * 510.0;
+        p1 := c.weapon.boomerang.path.p0 + rotate_vector(attack_forward, PI/4.0) * 150.0;
+        p2 := c.weapon.boomerang.path.p3 + rotate_vector(attack_forward, PI/2.0) * 250.0;
+        c.weapon.boomerang.path.p0 = p0;
+        c.weapon.boomerang.path.p1 = p1;
+        c.weapon.boomerang.path.p2 = p2;
+        c.weapon.boomerang.path.p3 = p3;
+        c.weapon.boomerang.path.v1 = -3.0*p0 + 9.0*p1 - 9.0*p2 + 3.0*p3;
+        c.weapon.boomerang.path.v2 = 6.0*p0 - 12.0*p1 + 6.0*p2;
+        c.weapon.boomerang.path.v3 = -3.0*p0 + 3.0*p1;
+        c.weapon.boomerang.path.arc_length = approximate_arc_length(c.weapon.boomerang.path);
         player = spawn(c);
     }
 
@@ -348,4 +356,19 @@ end_arena :: () {
         despawn(it);
     }
     game.gameplay_paused_until = 0.5;
+}
+
+approximate_arc_length :: (path: Bezier_Cubic) -> float {
+    result: float;
+    path_copy := path;
+    prev := path_copy.p0;
+    num_segments := 32;
+    for i: 1..num_segments {
+        t := (cast(float) i) / (cast(float) num_segments);
+        path_copy.t = t;
+        next := compute_position(path_copy);
+        result += distance(prev, next);
+        prev = next;
+    }
+    return result;
 }

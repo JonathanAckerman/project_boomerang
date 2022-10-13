@@ -51,6 +51,22 @@ Bezier_Cubic :: struct {
     p2: Vector2;
     p3: Vector2;
     t: float = 0.0;
+
+    // used to compute distance(t)
+    v1: Vector2;
+    v2: Vector2;
+    v3: Vector2;
+
+    arc_length: float;
+}
+
+compute_position :: (path: Bezier_Cubic) -> Vector2 {
+    t := path.t;
+    p0_component := path.p0 * ((-t*t*t) + (3.0*t*t) - (3.0*t) + 1.0);
+    p1_component := path.p1 * ((3.0*t*t*t) - (6.0*t*t) + (3.0*t));
+    p2_component := path.p2 * ((-3.0*t*t*t) + (3.0*t*t));
+    p3_component := path.p3 * (t*t*t);
+    return p0_component + p1_component + p2_component + p3_component;
 }
 
 Weapon_Type :: enum {
@@ -157,16 +173,14 @@ simulate :: (using creature: *Creature) {
     if weapon.type == {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
-            
+            // boomerang.path.t += frame.dt;
             if boomerang.status == .LEAVING {
-                boomerang.path.t += frame.dt;
                 {
-                    t := boomerang.path.t/1.5;
-                    p0_component := boomerang.path.p0 * ((-t*t*t) + (3.0*t*t) - (3.0*t) + 1.0);
-                    p1_component := boomerang.path.p1 * ((3.0*t*t*t) - (6.0*t*t) + (3.0*t));
-                    p2_component := boomerang.path.p2 * ((-3.0*t*t*t) + (3.0*t*t));
-                    p3_component := boomerang.path.p3 * (t*t*t);
-                    boomerang.position = p0_component + p1_component + p2_component + p3_component;
+                    s := boomerang.path.arc_length * frame.dt;
+                    t := boomerang.path.t;
+                    speed := length(t*t*boomerang.path.v1 + t*boomerang.path.v2 + boomerang.path.v3);
+                    boomerang.path.t = boomerang.path.t + (s / speed);
+                    boomerang.position = compute_position(boomerang.path);
                 }
 
                 if length(boomerang.position - boomerang.path.p3) < 10.0 {
