@@ -11,6 +11,13 @@ Entity :: struct {
     collider: Collider; // @Jay: maybe make this an array, maybe usingas it?
     has_rigidbody := false; // perhaps these should be pointers to an Entity array of T
     using #as rigidbody: Rigidbody;
+    entity_type: Entity_Type; // lets us get the type out of a *void in a collision callback
+}
+
+Entity_Type :: enum {
+    CREATURE;
+    WALL;
+    PROJECTILE;
 }
 
 Hurtable :: struct {

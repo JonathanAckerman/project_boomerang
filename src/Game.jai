@@ -110,7 +110,7 @@ game_loop :: inline () {
     using game;
     using context.entity_storage;
     frame.time = GetTime();
-    frame.dt = GetFrameTime();
+    frame.dt = GetFrameTime() * 0.01;
     game.gameplay_paused_until -= frame.dt;
 
     // simulate ----------------------------------------------------------------
@@ -243,24 +243,38 @@ game_reset :: () {
         w.collider.shape = .RECT;
         w.collider.size = .{100, 100};
         w.has_rigidbody = true;
+        w.entity_type = .WALL;
         spawn(w);
 
         for i: 0..8 {
             w.position.x += 100;
+            w.entity_type = .WALL;
             spawn(w);
         }
         for i: 0..8 {
             w.position.y += 100;
+            w.entity_type = .WALL;
             spawn(w);
         }
         for i: 0..8 {
             w.position.x -= 100;
+            w.entity_type = .WALL;
             spawn(w);
         }
         for i: 0..6 {
             w.position.y -= 100;
+            w.entity_type = .WALL;
             spawn(w);
         }
+
+        w.position = .{200, 200};
+        array_add(*w.animations, NewAnimation("wall/idle"));
+        w.has_collider = true;
+        w.collider.shape = .CIRCLE;
+        w.collider.radius = 50;
+        w.has_rigidbody = true;
+        w.entity_type = .WALL;
+        spawn(w);
     }
 }
 
@@ -302,6 +316,7 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     w.collider.shape = .RECT;
     w.collider.size = .{100, 100};
     w.has_rigidbody = true;
+    w.entity_type = .WALL;
     spawn(w);
 
     (cast(*Trigger) trigger.owner).is_active = false;
@@ -342,13 +357,28 @@ enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
 }
 
 boomerang_on_collision :: (owner: *void, collision: Collision) {
-    other := cast(*Entity) collision.other;
-    if !other.rigidbody.is_static return;
-
     weapon := cast(*Weapon) owner;
-    if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .RETURNING;
-    weapon.boomerang.hit_id = game.get_next_hit_id();
-    weapon.boomerang.path.t = 0.0;
+    other := cast(*Entity) collision.other;
+    if other.entity_type == {
+        case .CREATURE; return;
+        case .PROJECTILE;
+            // return to player and @TODO deflect projectile
+            if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .RETURNING;
+            weapon.boomerang.hit_id = game.get_next_hit_id();
+            weapon.boomerang.path.t = 0.0;
+        case .WALL;
+            // bounce off wall, increase travel distance (maybe variable on how far along path you are [ie: bouncing soon travels further than bouncing right at the end])
+
+
+            if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .BOUNCING;
+            weapon.boomerang.hit_id = game.get_next_hit_id();
+            weapon.boomerang.path.t = 0.0;
+
+            incidence_angle := acos(dot(collision.projection, collision.normal) / length(collision.projection));
+            weapon.boomerang.forward = unit_vector(rotate_vector(-1.0 * collision.projection, incidence_angle));
+            weapon.boomerang.bounce_destination = weapon.boomerang.forward * 200.0;
+    }
+
 }
 
 end_arena :: () {

@@ -67,6 +67,7 @@ produce_hurtbox :: (collider: Collider, hurtable: *Hurtable, owner: *void, on_hi
 Collision :: struct {
     other: *void;
     projection: Vector2;
+    normal:     Vector2;
 }
 
 Collidebox :: struct {
@@ -159,6 +160,8 @@ check_collision :: (a: *Collidebox, b: *Collidebox) -> bool, Collision {
     collision: Collision;
     collision.other = b.owner;
     is_colliding, projection := check_intersection(a, b);
+    if is_colliding then print("projection: %\n", projection);
+    collision.normal = ifx dot(projection, .{1, 0}) < dot(projection, .{0, 1}) then Vector2.{0,1} else .{1,0}; // what if equal?
     if is_colliding { collision.projection = projection; }
     return is_colliding, collision;
 }

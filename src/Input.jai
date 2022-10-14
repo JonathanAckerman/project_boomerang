@@ -34,7 +34,7 @@ handle_input :: inline () {
 
         gamepad.aim.x = GetGamepadAxisMovement(gamepad_index, xx GamepadAxis.GAMEPAD_AXIS_RIGHT_X);
         gamepad.aim.y = GetGamepadAxisMovement(gamepad_index, xx GamepadAxis.GAMEPAD_AXIS_RIGHT_Y);
-        player.weapon.boomerang.forward = .{0, 0};
+        // player.weapon.boomerang.forward = .{0, 0};
 
         side := dot(rotate_vector(player.forward, PI/2), gamepad.aim);
         if side < 0 then side = -1.0;

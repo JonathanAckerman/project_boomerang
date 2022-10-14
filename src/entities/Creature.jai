@@ -21,6 +21,7 @@ Weapon :: struct {
                 SHEATHED;
                 LEAVING;
                 RETURNING;
+                BOUNCING;
             }
             position: Vector2;
             forward:  Vector2;
@@ -31,6 +32,7 @@ Weapon :: struct {
             tick_rate : float64 = 0.5;
             use_curve_shot := false;
             shot_side: float;
+            bounce_destination: Vector2;
         }
 
         gloves: struct {
@@ -165,6 +167,7 @@ simulate :: (using creature: *Creature) {
                     boomerang.status = .SHEATHED;
                     game.test_particle_emitter4.is_active = false;
                     boomerang.path = .{};
+                    boomerang.forward = .{};
                 }
         }
     }
@@ -173,15 +176,20 @@ simulate :: (using creature: *Creature) {
     if weapon.type == {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
-            // boomerang.path.t += frame.dt;
             if boomerang.status == .LEAVING {
-                {
-                    s := boomerang.path.arc_length * frame.dt;
-                    t := boomerang.path.t;
-                    speed := length(t*t*boomerang.path.v1 + t*boomerang.path.v2 + boomerang.path.v3);
-                    boomerang.path.t = boomerang.path.t + (s / speed);
-                    boomerang.position = compute_position(boomerang.path);
-                }
+                boomerang.path.t += frame.dt;
+                // s := boomerang.path.arc_length * frame.dt;
+                // t := boomerang.path.t;
+                // speed := length(t*t*boomerang.path.v1 + t*boomerang.path.v2 + boomerang.path.v3);
+                // boomerang.path.t = boomerang.path.t + (s / speed);
+                // boomerang.position = compute_position(boomerang.path);
+
+                t := boomerang.path.t/1.5;
+                p0_component := boomerang.path.p0 * ((-t*t*t) + (3.0*t*t) - (3.0*t) + 1.0);
+                p1_component := boomerang.path.p1 * ((3.0*t*t*t) - (6.0*t*t) + (3.0*t));
+                p2_component := boomerang.path.p2 * ((-3.0*t*t*t) + (3.0*t*t));
+                p3_component := boomerang.path.p3 * (t*t*t);
+                boomerang.position = p0_component + p1_component + p2_component + p3_component;
 
                 if length(boomerang.position - boomerang.path.p3) < 10.0 {
                     boomerang.status = .RETURNING;
@@ -198,6 +206,15 @@ simulate :: (using creature: *Creature) {
                 if length(boomerang.position - position) < 10.0 {
                     boomerang.status = .SHEATHED;
                     game.test_particle_emitter4.is_active = false;
+                }
+            }
+
+            if boomerang.status == .BOUNCING {
+                boomerang.position += boomerang.forward * boomerang.move_speed * frame.dt;
+                if length(boomerang.position - boomerang.bounce_destination) < 10.0 {
+                    boomerang.status = .RETURNING;
+                    weapon.boomerang.hit_id = game.get_next_hit_id();
+                    // do i need to reset path.t here?
                 }
             }
 
@@ -253,6 +270,7 @@ Creatures: struct {
         mass = 100,
         has_rigidbody = true,
         rigidbody.is_static = false,
+        entity_type = .CREATURE,
     };
     // Enemies ----------------------------------------------------------------------
     SMALL_FRY :: Creature.{
@@ -266,6 +284,7 @@ Creatures: struct {
         collider.radius = 12.0,
         has_rigidbody = true,
         rigidbody.is_static = false,
+        entity_type = .CREATURE,
     };
     MEDIUM_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=5.0, cur=2.0},
@@ -278,6 +297,7 @@ Creatures: struct {
         collider.radius = 20.0,
         has_rigidbody = true,
         rigidbody.is_static = false,
+        entity_type = .CREATURE,
     };
     BIG_FRY :: Creature.{
         rotation_speed = .{min=0.1, max=5.0, cur=1.0},
@@ -290,5 +310,6 @@ Creatures: struct {
         mass = 200,
         has_rigidbody = true,
         rigidbody.is_static = false,
+        entity_type = .CREATURE,
     };
 }
