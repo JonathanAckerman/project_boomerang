@@ -110,7 +110,7 @@ game_loop :: inline () {
     using game;
     using context.entity_storage;
     frame.time = GetTime();
-    frame.dt = GetFrameTime() * 0.01;
+    frame.dt = GetFrameTime();
     game.gameplay_paused_until -= frame.dt;
 
     // simulate ----------------------------------------------------------------
@@ -367,16 +367,15 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
             weapon.boomerang.hit_id = game.get_next_hit_id();
             weapon.boomerang.path.t = 0.0;
         case .WALL;
-            // bounce off wall, increase travel distance (maybe variable on how far along path you are [ie: bouncing soon travels further than bouncing right at the end])
-
-
             if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .BOUNCING;
             weapon.boomerang.hit_id = game.get_next_hit_id();
             weapon.boomerang.path.t = 0.0;
 
-            incidence_angle := acos(dot(collision.projection, collision.normal) / length(collision.projection));
-            weapon.boomerang.forward = unit_vector(rotate_vector(-1.0 * collision.projection, incidence_angle));
-            weapon.boomerang.bounce_destination = weapon.boomerang.forward * 200.0;
+            velocity := weapon.boomerang.path.v1 + weapon.boomerang.path.v2 + weapon.boomerang.path.v3;
+            // incidence_angle := acos(dot(velocity, collision.normal) / length(velocity));
+            incidence_angle := atan2_between(velocity, collision.normal) * -1.0;
+            weapon.boomerang.forward = unit_vector(rotate_vector(collision.normal, incidence_angle));
+            weapon.boomerang.bounce_destination = weapon.boomerang.position + weapon.boomerang.forward * 500.0;
     }
 
 }

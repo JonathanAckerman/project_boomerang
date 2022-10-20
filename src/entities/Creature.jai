@@ -214,7 +214,8 @@ simulate :: (using creature: *Creature) {
                 if length(boomerang.position - boomerang.bounce_destination) < 10.0 {
                     boomerang.status = .RETURNING;
                     weapon.boomerang.hit_id = game.get_next_hit_id();
-                    // do i need to reset path.t here?
+                    boomerang.path = .{};
+                    boomerang.forward = .{};
                 }
             }
 
@@ -240,6 +241,8 @@ render :: (using creature: *Creature) {
             if boomerang.status != .SHEATHED {
                 if !game.paused && !game.is_gameplay_paused() then update_animation(*boomerang.animation);
                 draw_texture_centered_with_rotation(Current_Frame(boomerang.animation), world_to_screen(boomerang.position), 0.0);
+
+                DrawLineV(world_to_screen(boomerang.position), world_to_screen(boomerang.position + boomerang.forward * 50), WHITE);
             }
     }
 }

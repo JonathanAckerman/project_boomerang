@@ -159,10 +159,11 @@ handle_collision :: () {
 check_collision :: (a: *Collidebox, b: *Collidebox) -> bool, Collision {
     collision: Collision;
     collision.other = b.owner;
-    is_colliding, projection := check_intersection(a, b);
-    if is_colliding then print("projection: %\n", projection);
-    collision.normal = ifx dot(projection, .{1, 0}) < dot(projection, .{0, 1}) then Vector2.{0,1} else .{1,0}; // what if equal?
-    if is_colliding { collision.projection = projection; }
+    is_colliding, projection, normal := check_intersection(a, b);
+    if is_colliding { 
+        collision.projection = projection; 
+        collision.normal = normal;
+    }
     return is_colliding, collision;
 }
 
@@ -170,42 +171,66 @@ check_hit :: (hitbox: *Hitbox, hurtbox: *Hurtbox) -> bool {
     return check_intersection(hitbox, hurtbox);
 }
 
-check_intersection :: (a: *Collider, b: *Collider) -> bool, Vector2 {
-    is_overlapping: bool; projection: Vector2;
+check_intersection :: (a: *Collider, b: *Collider) -> bool, Vector2, Vector2 {
+    is_overlapping: bool; projection: Vector2; normal: Vector2;
     if #complete a.shape == {
         case .CIRCLE; if #complete b.shape == {
             case .CIRCLE; 
-                is_overlapping, projection = circle_circle(a, b);
+                is_overlapping, projection, normal = circle_circle(a, b);
             case .RECT;
-                is_overlapping, projection = aabb_circle(b, a);
+                is_overlapping, projection, normal = aabb_circle(b, a);
         }
         case .RECT; if #complete b.shape == {
             case .CIRCLE;
-                is_overlapping, projection = aabb_circle(a, b);
+                is_overlapping, projection, normal = aabb_circle(a, b);
             case .RECT;
-                is_overlapping = aabb_aabb(a, b);
+                is_overlapping, normal = aabb_aabb(a, b);
         }
     }
-    return is_overlapping, projection;
+    return is_overlapping, projection, normal;
 
-    circle_circle :: inline (a: *Collider, b: *Collider) -> bool, Vector2 {
+    circle_circle :: inline (a: *Collider, b: *Collider) -> bool, Vector2, Vector2 {
         displacement := a.position - b.position;
         distance := length(displacement);
         overlap_scalar := (a.radius + b.radius) - distance;
-        return distance < (a.radius + b.radius), unit_vector(displacement) * overlap_scalar;
+
+        is_overlapping := distance < (a.radius + b.radius);
+        normal := unit_vector(displacement);
+        projection := normal * overlap_scalar;
+        return is_overlapping, projection, normal;
     }
     // @Jay: if these dont modify they should pass by value
-    aabb_aabb :: inline (a: *Collider, b: *Collider) -> bool {
+    aabb_aabb :: inline (a: *Collider, b: *Collider) -> bool, Vector2 {
+        normal: Vector2;
         a_lower_left  := a.position - a.size/2.0;
         a_upper_right := a.position + a.size/2.0;
         b_lower_left  := a.position - a.size/2.0;
         b_upper_right := a.position + a.size/2.0;
-        return !(b_lower_left.x > a_upper_right.x 
-                || b_upper_right.x < a_lower_left.x 
-                || b_upper_right.y > a_lower_left.y 
-                || b_lower_left.y < a_upper_right.y);
+
+        b_right_of_a := b_lower_left.x > a_upper_right.x;
+        b_left_of_a := b_upper_right.x < a_lower_left.x;
+        b_below_a := b_upper_right.y > a_lower_left.y;
+        b_above_a := b_lower_left.y < a_upper_right.y;
+
+        is_overlapping := !(b_right_of_a || b_left_of_a || b_below_a || b_above_a);
+        if is_overlapping {
+            b_on_right  := abs(a_upper_right.x - b_lower_left.x);
+            b_on_left   := abs(a_lower_left.x - b_upper_right.x);
+            b_on_top    := abs(a_upper_right.y - b_lower_left.y);
+            b_on_bottom := abs(a_lower_left.y - b_upper_right.y);
+
+            x_min := min(b_on_right, b_on_left);
+            y_min := min(b_on_bottom, b_on_top);
+            if x_min < y_min {
+                normal = ifx b_on_right < b_on_left then Vector2.{-1,0} else .{1,0};
+            } else {
+                normal = ifx b_on_bottom < b_on_top then Vector2.{0,-1} else .{0,1};
+            }
+        }
+
+        return is_overlapping, normal;
     }
-    aabb_circle :: inline (r: *Collider, c: *Collider) -> bool, Vector2 {
+    aabb_circle :: inline (r: *Collider, c: *Collider) -> bool, Vector2, Vector2 {
         half_size := r.size/2.0;
         displacement := c.position - r.position;
         closest_x := r.position.x + clamp(displacement.x, -half_size.x, half_size.x);
@@ -216,8 +241,15 @@ check_intersection :: (a: *Collider, b: *Collider) -> bool, Vector2 {
         {
             overlap_scalar := c.radius - length(circle_to_closest);
             projection := unit_vector(circle_to_closest) * overlap_scalar;
-            return true, projection;
+            normal: Vector2;
+
+            if closest_x == r.position.x - r.size.x/2.0 then normal += .{-1,0};
+            if closest_x == r.position.x + r.size.x/2.0 then normal += .{1,0};
+            if closest_y == r.position.y - r.size.y/2.0 then normal += .{0,-1};
+            if closest_y == r.position.y + r.size.y/2.0 then normal += .{0,1};
+
+            return true, projection, normal;
         }
-        return false, .{};
+        return false, .{}, .{};
     }
 }
