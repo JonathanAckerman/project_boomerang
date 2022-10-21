@@ -248,6 +248,7 @@ check_intersection :: (a: *Collider, b: *Collider) -> bool, Vector2, Vector2 {
             if closest_y == r.position.y - r.size.y/2.0 then normal += .{0,-1};
             if closest_y == r.position.y + r.size.y/2.0 then normal += .{0,1};
 
+            normal = unit_vector(normal);
             return true, projection, normal;
         }
         return false, .{}, .{};
