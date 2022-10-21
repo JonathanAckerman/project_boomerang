@@ -24,15 +24,13 @@ Weapon :: struct {
                 BOUNCING;
             }
             position: Vector2;
-            forward:  Vector2;
-            path: Bezier_Cubic;
+            velocity: Vector2;
+            start_position: Vector2;
             move_speed := 500.0;
+            travel_distance := 500.0;
             collidebox: Collidebox;
             hit_id: Hit_ID;
             tick_rate : float64 = 0.5;
-            use_curve_shot := false;
-            shot_side: float;
-            bounce_destination: Vector2;
         }
 
         gloves: struct {
@@ -45,30 +43,6 @@ Weapon :: struct {
 
         }
     }
-}
-
-Bezier_Cubic :: struct {
-    p0: Vector2;
-    p1: Vector2;
-    p2: Vector2;
-    p3: Vector2;
-    t: float = 0.0;
-
-    // used to compute distance(t)
-    v1: Vector2;
-    v2: Vector2;
-    v3: Vector2;
-
-    arc_length: float;
-}
-
-compute_position :: (path: Bezier_Cubic) -> Vector2 {
-    t := path.t;
-    p0_component := path.p0 * ((-t*t*t) + (3.0*t*t) - (3.0*t) + 1.0);
-    p1_component := path.p1 * ((3.0*t*t*t) - (6.0*t*t) + (3.0*t));
-    p2_component := path.p2 * ((-3.0*t*t*t) + (3.0*t*t));
-    p3_component := path.p3 * (t*t*t);
-    return p0_component + p1_component + p2_component + p3_component;
 }
 
 Weapon_Type :: enum {
@@ -115,26 +89,6 @@ simulate :: (using creature: *Creature) {
     produce_hurtbox(collider, *hurtable, creature, hit_response);
     for hurtable.hit_blocks if frame.time >= it.end_time then remove it;
 
-    // @TEMP: just to see the path in real time
-    if game.debug && weapon.boomerang.status == .SHEATHED {
-        boomerang := *weapon.boomerang;
-        attack_forward := ifx boomerang.forward != .{0, 0} then boomerang.forward else forward;
-        if !boomerang.use_curve_shot {
-            boomerang.position = position + attack_forward * 10.0;
-            boomerang.path.p0 = boomerang.position;
-            boomerang.path.p3 = position + attack_forward * 510.0;
-            boomerang.path.p1 = boomerang.path.p0 + rotate_vector(attack_forward, boomerang.shot_side * PI/4.0) * 150.0;
-            boomerang.path.p2 = boomerang.path.p3 + rotate_vector(attack_forward, boomerang.shot_side * PI/2.0) * 250.0;
-        }
-        else {
-            boomerang.position = position + rotate_vector(forward, boomerang.shot_side * PI/2) * 10.0;
-            boomerang.path.p0 = boomerang.position;
-            boomerang.path.p3 = position + attack_forward * 710.0;
-            boomerang.path.p1 = boomerang.path.p0 + rotate_vector(attack_forward, boomerang.shot_side * PI/2.0) * 500.0;
-            boomerang.path.p2 = boomerang.path.p3 + rotate_vector(attack_forward, boomerang.shot_side * PI/2.0) * 500.0;
-        }
-    }
-
     // respond to Attack input
     if try_attack {
         if weapon.type == {
@@ -142,32 +96,16 @@ simulate :: (using creature: *Creature) {
                 boomerang := *weapon.boomerang;
                 if boomerang.status == .SHEATHED {
                     boomerang.status = .LEAVING;
-                    attack_forward := ifx boomerang.forward != .{0, 0} then boomerang.forward else forward;
-                    if !boomerang.use_curve_shot {
-                        boomerang.position = position + attack_forward * 10.0;
-                        boomerang.path.p0 = boomerang.position;
-                        boomerang.path.p3 = position + attack_forward * 510.0;
-                        boomerang.path.p1 = boomerang.path.p0 + rotate_vector(attack_forward, boomerang.shot_side * PI/4.0) * 150.0;
-                        boomerang.path.p2 = boomerang.path.p3 + rotate_vector(attack_forward, boomerang.shot_side * PI/2.0) * 250.0;
-                        boomerang.hit_id = game.get_next_hit_id();
-                        game.test_particle_emitter4.is_active = true;
-                    }
-                    else {
-                        boomerang.position = position + rotate_vector(forward, boomerang.shot_side * PI/2) * 10.0;
-                        boomerang.path.p0 = boomerang.position;
-                        boomerang.path.p3 = position + attack_forward * 710.0;
-                        boomerang.path.p1 = boomerang.path.p0 + rotate_vector(attack_forward, boomerang.shot_side * PI/2.0) * 500.0;
-                        boomerang.path.p2 = boomerang.path.p3 + rotate_vector(attack_forward, boomerang.shot_side * PI/2.0) * 500.0;
-                        boomerang.hit_id = game.get_next_hit_id();
-                        game.test_particle_emitter4.is_active = true;
-                    }
+                    boomerang.position = position + forward * 10.0;
+                    boomerang.start_position = boomerang.position;
+                    boomerang.velocity = forward * boomerang.move_speed;
+                    boomerang.hit_id = game.get_next_hit_id();
+                    game.test_particle_emitter4.is_active = true;
                 }
                 else {
                     // @TODO: nerf this with a delay Action
                     boomerang.status = .SHEATHED;
                     game.test_particle_emitter4.is_active = false;
-                    boomerang.path = .{};
-                    boomerang.forward = .{};
                 }
         }
     }
@@ -176,50 +114,8 @@ simulate :: (using creature: *Creature) {
     if weapon.type == {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
-            if boomerang.status == .LEAVING {
-                boomerang.path.t += frame.dt;
-                // s := boomerang.path.arc_length * frame.dt;
-                // t := boomerang.path.t;
-                // speed := length(t*t*boomerang.path.v1 + t*boomerang.path.v2 + boomerang.path.v3);
-                // boomerang.path.t = boomerang.path.t + (s / speed);
-                // boomerang.position = compute_position(boomerang.path);
-
-                t := boomerang.path.t/1.5;
-                p0_component := boomerang.path.p0 * ((-t*t*t) + (3.0*t*t) - (3.0*t) + 1.0);
-                p1_component := boomerang.path.p1 * ((3.0*t*t*t) - (6.0*t*t) + (3.0*t));
-                p2_component := boomerang.path.p2 * ((-3.0*t*t*t) + (3.0*t*t));
-                p3_component := boomerang.path.p3 * (t*t*t);
-                boomerang.position = p0_component + p1_component + p2_component + p3_component;
-
-                if length(boomerang.position - boomerang.path.p3) < 10.0 {
-                    boomerang.status = .RETURNING;
-                    boomerang.hit_id = game.get_next_hit_id();
-                    weapon.boomerang.path.t = 0.0;
-                }
-
-                produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
-            } 
-            
-            if boomerang.status == .RETURNING {
-                direction := position - boomerang.position;
-                boomerang.position += unit_vector(direction) * boomerang.move_speed * frame.dt;
-                if length(boomerang.position - position) < 10.0 {
-                    boomerang.status = .SHEATHED;
-                    game.test_particle_emitter4.is_active = false;
-                }
-            }
-
-            if boomerang.status == .BOUNCING {
-                boomerang.position += boomerang.forward * boomerang.move_speed * frame.dt;
-                if length(boomerang.position - boomerang.bounce_destination) < 10.0 {
-                    boomerang.status = .RETURNING;
-                    weapon.boomerang.hit_id = game.get_next_hit_id();
-                    boomerang.path = .{};
-                    boomerang.forward = .{};
-                }
-            }
-
             if boomerang.status != .SHEATHED {
+                boomerang.position += boomerang.velocity * frame.dt;
                 for boomerang.animation.frames {
                     // for it.hitboxes produce_hitbox(it.collider, creature, it.hit);
                     // @TEMP: use collidebox for hitbox
@@ -227,6 +123,31 @@ simulate :: (using creature: *Creature) {
                 }
                 boomerang.collidebox.position = boomerang.position;
                 game.test_particle_emitter4.position = boomerang.position;
+            }
+
+            if boomerang.status == .LEAVING {
+                if length(boomerang.position - boomerang.start_position) > boomerang.travel_distance {
+                    boomerang.status = .RETURNING;
+                    boomerang.hit_id = game.get_next_hit_id();
+                }
+
+                produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
+            } 
+            
+            if boomerang.status == .RETURNING {
+                direction := position - boomerang.position;
+                boomerang.velocity = unit_vector(direction) * boomerang.move_speed;
+                if length(boomerang.position - position) < 10.0 {
+                    boomerang.status = .SHEATHED;
+                    game.test_particle_emitter4.is_active = false;
+                }
+            }
+
+            if boomerang.status == .BOUNCING {
+                if length(boomerang.position - boomerang.start_position) > boomerang.travel_distance {
+                    boomerang.status = .RETURNING;
+                    weapon.boomerang.hit_id = game.get_next_hit_id();
+                }
             }
     }
 }
@@ -241,9 +162,11 @@ render :: (using creature: *Creature) {
             if boomerang.status != .SHEATHED {
                 if !game.paused && !game.is_gameplay_paused() then update_animation(*boomerang.animation);
                 draw_texture_centered_with_rotation(Current_Frame(boomerang.animation), world_to_screen(boomerang.position), 0.0);
-
-                DrawLineV(world_to_screen(boomerang.position), world_to_screen(boomerang.position + boomerang.forward * 50), WHITE);
             }
+
+            DrawCircleV(ss(boomerang.start_position), 5.0, BLUE);
+            DrawCircleV(ss(boomerang.position), 50.0, YELLOW);
+            DrawLineV(ss(boomerang.position), ss(boomerang.position + boomerang.velocity), ORANGE);
     }
 }
 
