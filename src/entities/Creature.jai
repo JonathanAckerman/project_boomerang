@@ -163,10 +163,6 @@ render :: (using creature: *Creature) {
                 if !game.paused && !game.is_gameplay_paused() then update_animation(*boomerang.animation);
                 draw_texture_centered_with_rotation(Current_Frame(boomerang.animation), world_to_screen(boomerang.position), 0.0);
             }
-
-            DrawCircleV(ss(boomerang.start_position), 5.0, BLUE);
-            DrawCircleV(ss(boomerang.position), 50.0, YELLOW);
-            DrawLineV(ss(boomerang.position), ss(boomerang.position + boomerang.velocity), ORANGE);
     }
 }
 

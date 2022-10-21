@@ -351,9 +351,20 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
             if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .BOUNCING;
             weapon.boomerang.hit_id = game.get_next_hit_id();
 
-            // incidence_angle := acos(dot(velocity, collision.normal) / length(velocity));
-            incidence_angle := atan2_between(weapon.boomerang.velocity, collision.normal);
-            weapon.boomerang.velocity = unit_vector(rotate_vector(collision.normal, -incidence_angle)) * weapon.boomerang.move_speed;
+            inv_velocity := weapon.boomerang.velocity * -1.0;
+            incidence_angle := acos(dot(inv_velocity, collision.normal) / length(inv_velocity));
+            {
+                v := atan2(-inv_velocity.y, inv_velocity.x);
+                n := atan2(-collision.normal.y, collision.normal.x);
+                // @TODO: fix this jank
+                if collision.normal == .{-1, 0} {
+                    if v > n then n = PI;        // since atan2 wraps at PI
+                    if v < 0 then v += 2.0 * PI; // since atan2 wraps at PI
+                }
+                if v < n then incidence_angle *= -1.0;
+            }
+
+            weapon.boomerang.velocity = unit_vector(rotate_vector(collision.normal, incidence_angle)) * weapon.boomerang.move_speed;
             weapon.boomerang.start_position = weapon.boomerang.position;
     }
 
