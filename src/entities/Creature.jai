@@ -148,6 +148,8 @@ simulate :: (using creature: *Creature) {
                     boomerang.status = .RETURNING;
                     weapon.boomerang.hit_id = game.get_next_hit_id();
                 }
+
+                produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
             }
     }
 }

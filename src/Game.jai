@@ -351,6 +351,10 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
             if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .BOUNCING;
             weapon.boomerang.hit_id = game.get_next_hit_id();
 
+            print("collision with: %\n", other);
+            print("normal: %\n", collision.normal);
+            print("velocity: %\n", weapon.boomerang.velocity);
+
             inv_velocity := weapon.boomerang.velocity * -1.0;
             incidence_angle := acos(dot(inv_velocity, collision.normal) / length(inv_velocity));
             {
@@ -363,6 +367,7 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
                 }
                 if v < n then incidence_angle *= -1.0;
             }
+            print("angle: %\n", incidence_angle);
 
             weapon.boomerang.velocity = unit_vector(rotate_vector(collision.normal, incidence_angle)) * weapon.boomerang.move_speed;
             weapon.boomerang.start_position = weapon.boomerang.position;
