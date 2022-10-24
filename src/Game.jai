@@ -245,8 +245,10 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
         end_scale=0.3,
         start_color=WHITE,
         end_color=GRAY,
-        start_velocity=.{0, -50},
-        acceleration=.{0, -50},
+        start_velocity=.{0, -150},
+        speed_noise=.{min=0, max=1},
+        direction_noise=.{min=-PI/2, max=PI/2},
+        acceleration=.{0, -150},
     };
     e.position=c.position;
     e.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");

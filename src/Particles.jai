@@ -16,6 +16,8 @@ Particle_Emitter :: struct {
     start_scale: float;
     end_scale:   float;
     start_velocity: Vector2;
+    speed_noise: Range(float);
+    direction_noise: Range(float);
     acceleration:   Vector2;
 }
 
@@ -42,7 +44,10 @@ emit :: (using emitter: *Particle_Emitter) {
                 x := random_get_within_range(position.x - size.x/2.0, position.x + size.x/2.0);
                 y := random_get_within_range(position.y - size.y/2.0, position.y + size.y/2.0);
                 p.position = xy(x, y);
-                p.velocity = start_velocity;
+                d := random_get_within_range(direction_noise.min, direction_noise.max);
+                direction := rotate_vector(start_velocity, d);
+                speed := random_get_within_range(speed_noise.min, speed_noise.max);
+                p.velocity = direction * speed;
                 p.color = start_color;
                 p.scale = start_scale;
                 p.emitter = emitter;
