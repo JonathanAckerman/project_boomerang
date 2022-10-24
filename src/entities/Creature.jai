@@ -10,7 +10,6 @@ Creature :: struct {
     try_attack := false;
 
     on_death: ()->();
-    on_spawn: ()->();
 }
 
 Weapon :: struct {

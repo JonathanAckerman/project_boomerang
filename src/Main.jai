@@ -30,6 +30,7 @@ the_font: Font;
 #load "AI.jai";
 #load "Collision.jai";
 #load "Particles.jai";
+#load "Time.jai";
 
 #import "Math";
 #import "Basic";

@@ -7,6 +7,7 @@ game: struct {
     paused:    bool;
     gameplay_paused_until: float64; // @Jay: maybe this should be ApolloTime?
     is_gameplay_paused :: inline () -> bool { return game.gameplay_paused_until > 0.0; }
+    slowmo: Slowmo;
 
     player: Handle(Creature);
     camera: struct {
@@ -44,6 +45,7 @@ Trigger :: struct {
 
 frame: struct {
     dt: float;
+    scale: float = 1.0;
     time: float64;
 }
 
@@ -55,8 +57,8 @@ game_loop :: inline () {
     using game;
     using context.entity_storage;
     frame.time = GetTime();
-    frame.dt = GetFrameTime();
-    game.gameplay_paused_until -= frame.dt;
+    frame.dt = GetFrameTime() * frame.scale;
+    game.gameplay_paused_until -= frame.dt / frame.scale;
 
     // simulate ----------------------------------------------------------------
     handle_input();
@@ -319,6 +321,8 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
 simulate :: () {
     using game;
     using context.entity_storage;
+
+    simulate(*slowmo);
     
     for _Wall     simulate(it);
     for _Creature simulate(it);
@@ -346,7 +350,16 @@ enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
     for hurtable.hit_blocks if it.hit_id == hit.id return;
 
     array_add(*hurtable.hit_blocks, make_block(hit.id, GetTime() + hit.tick_rate));
-    if hurtable.health.cur > hurtable.health.min then hurtable.health.cur -= hit.damage;
+    if hurtable.health.cur > hurtable.health.min {
+        hurtable.health.cur -= hit.damage;
+        game.slowmo = .{
+            is_active = true,
+            scale = 0.2,
+            attack = 0.01,
+            sustain = 0.01,
+            decay = 0.01,
+        };
+    }
 }
 
 boomerang_on_collision :: (owner: *void, collision: Collision) {
