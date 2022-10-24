@@ -243,10 +243,10 @@ check_intersection :: (a: *Collider, b: *Collider) -> bool, Vector2, Vector2 {
             projection := unit_vector(circle_to_closest) * overlap_scalar;
             normal: Vector2;
 
-            if closest_x == r.position.x - r.size.x/2.0 then normal += .{-1,0};
-            if closest_x == r.position.x + r.size.x/2.0 then normal += .{1,0};
-            if closest_y == r.position.y - r.size.y/2.0 then normal += .{0,-1};
-            if closest_y == r.position.y + r.size.y/2.0 then normal += .{0,1};
+            if closest_x == r.position.x - r.size.x/2.0 then normal = .{-1,0};
+            if closest_x == r.position.x + r.size.x/2.0 then normal = .{1,0};
+            if closest_y == r.position.y - r.size.y/2.0 then normal = .{0,-1};
+            if closest_y == r.position.y + r.size.y/2.0 then normal = .{0,1};
 
             normal = unit_vector(normal);
             return true, projection, normal;

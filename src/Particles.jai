@@ -1,32 +1,32 @@
 Particle_Emitter :: struct {
+    texture: Texture;
     is_active := true;
     position: Vector2;
     size: Vector2;
-    max_particles: int;
+    max_particles:   int;
+    alive_particles: int;
     deactivate_timer: float;
     
-    spawn_interval: float; // will spawn after X seconds
     spawn_timer: float;
+    spawn_interval: float; // will spawn a particle after X seconds
     decay_interval: float; // will live for X seconds
 
-    texture: Texture;
     start_color: Color = WHITE;
     end_color:   Color = WHITE;
     start_scale: float;
     end_scale:   float;
     start_velocity: Vector2;
     acceleration:   Vector2;
-
-    particles: [..] Particle;
 }
 
 Particle :: struct {
+    lifetime: float;
     position: Vector2;
     velocity: Vector2;
     color: Color;
     scale: float;
-    lifetime: float;
-    // @TODO: rotation is tricky so lets ignore it for now
+
+    emitter: *Particle_Emitter;
 }
 
 emit :: (using emitter: *Particle_Emitter) {
@@ -36,15 +36,18 @@ emit :: (using emitter: *Particle_Emitter) {
         spawn_timer -= frame.dt;
 
         if spawn_timer <= 0.0 {
-            if particles.count < max_particles {
-                particle: Particle;
+            if alive_particles < max_particles {
+                p: Particle;
+                p.lifetime = decay_interval;
                 x := random_get_within_range(position.x - size.x/2.0, position.x + size.x/2.0);
                 y := random_get_within_range(position.y - size.y/2.0, position.y + size.y/2.0);
-                particle.position = xy(x, y);
-                particle.velocity = start_velocity;
-                particle.color = start_color;
-                particle.scale = start_scale;
-                array_add(*particles, particle);
+                p.position = xy(x, y);
+                p.velocity = start_velocity;
+                p.color = start_color;
+                p.scale = start_scale;
+                p.emitter = emitter;
+                array_add(*game.particle_system.particles, p);
+                alive_particles += 1;
             }
             spawn_timer = spawn_interval;
         }
@@ -53,35 +56,30 @@ emit :: (using emitter: *Particle_Emitter) {
 
 simulate :: (using emitter: *Particle_Emitter) {
     if game.paused return;
-
     if deactivate_timer then deactivate_timer -= frame.dt;
     if deactivate_timer < 0.0 then is_active = false;
-
-    for * particles {
-        it.lifetime += frame.dt;
-
-        if it.lifetime > decay_interval {
-            remove it;
-        } else {
-            t := it.lifetime / decay_interval;
-
-            // @TODO: this is probably wrong because of color Value
-            it.color.r = cast(u8) lerp(cast(float) start_color.r, cast(float) end_color.r, t);
-            it.color.g = cast(u8) lerp(cast(float) start_color.g, cast(float) end_color.g, t);
-            it.color.b = cast(u8) lerp(cast(float) start_color.b, cast(float) end_color.b, t);
-            it.color.a = cast(u8) lerp(cast(float) start_color.a, cast(float) end_color.a, t);
-
-            it.scale = lerp(start_scale, end_scale, t);
-
-            it.position += it.velocity * frame.dt;
-            it.velocity += acceleration * frame.dt;
-        }
-    }
+    // @TODO: think about how to clean up emitters that we're done with vs. ones we might use again
 }
 
-render :: (using emitter: Particle_Emitter) {
-    for particles {
-        // @Jay: maybe we need to sort these by some metric like lifetime
-        draw_texture_centered_with_rotation(texture, world_to_screen(it.position), 0.0, it.scale, it.color);
-    }
+simulate :: (using particle: *Particle) {
+    if game.paused return;
+    
+    lifetime -= frame.dt;
+    t := 1.0 - lifetime / emitter.decay_interval;
+
+    // @TODO: this is probably wrong because of color Value
+    color.r = cast(u8) lerp(cast(float) emitter.start_color.r, cast(float) emitter.end_color.r, t);
+    color.g = cast(u8) lerp(cast(float) emitter.start_color.g, cast(float) emitter.end_color.g, t);
+    color.b = cast(u8) lerp(cast(float) emitter.start_color.b, cast(float) emitter.end_color.b, t);
+    color.a = cast(u8) lerp(cast(float) emitter.start_color.a, cast(float) emitter.end_color.a, t);
+
+    scale = lerp(emitter.start_scale, emitter.end_scale, t);
+
+    position += velocity * frame.dt;
+    velocity += emitter.acceleration * frame.dt;
+}
+
+render :: (using particle: Particle) {
+    // @Jay: maybe we need to sort these by some metric like lifetime
+    draw_texture_centered_with_rotation(emitter.texture, world_to_screen(position), 0.0, scale, color);
 }

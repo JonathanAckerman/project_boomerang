@@ -10,6 +10,7 @@ Creature :: struct {
     try_attack := false;
 
     on_death: ()->();
+    on_spawn: ()->();
 }
 
 Weapon :: struct {
@@ -30,7 +31,8 @@ Weapon :: struct {
             travel_distance := 500.0;
             collidebox: Collidebox;
             hit_id: Hit_ID;
-            tick_rate : float64 = 0.5;
+            tick_rate: float64 = 0.5;
+            emitter: *Particle_Emitter;
         }
 
         gloves: struct {
@@ -100,12 +102,12 @@ simulate :: (using creature: *Creature) {
                     boomerang.start_position = boomerang.position;
                     boomerang.velocity = forward * boomerang.move_speed;
                     boomerang.hit_id = game.get_next_hit_id();
-                    game.test_particle_emitter4.is_active = true;
+                    boomerang.emitter.is_active = true;
                 }
                 else {
                     // @TODO: nerf this with a delay Action
                     boomerang.status = .SHEATHED;
-                    game.test_particle_emitter4.is_active = false;
+                    boomerang.emitter.is_active = false;
                 }
         }
     }
@@ -122,7 +124,7 @@ simulate :: (using creature: *Creature) {
                     produce_hitbox(boomerang.collidebox.collider, creature, make_hit(boomerang.hit_id, 1, tick_rate=boomerang.tick_rate));
                 }
                 boomerang.collidebox.position = boomerang.position;
-                game.test_particle_emitter4.position = boomerang.position;
+                boomerang.emitter.position = boomerang.position;
             }
 
             if boomerang.status == .LEAVING {
@@ -139,7 +141,7 @@ simulate :: (using creature: *Creature) {
                 boomerang.velocity = unit_vector(direction) * boomerang.move_speed;
                 if length(boomerang.position - position) < 10.0 {
                     boomerang.status = .SHEATHED;
-                    game.test_particle_emitter4.is_active = false;
+                    boomerang.emitter.is_active = false;
                 }
             }
 
@@ -180,6 +182,10 @@ creature_on_collision :: (owner: *void, collision: Collision) {
     }
 }
 creature_on_collision_started :: (owner: *void, collision: Collision) {
+}
+
+creature_on_spawn :: () {
+
 }
 
 // Archetypes -----------------------------------------------------------------------

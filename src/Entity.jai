@@ -1,7 +1,7 @@
 Entity :: struct {
     using #as entity_base: Entity_Base;
-    rotation_speed: Stat_Range(float);
-    move_speed: Stat_Range(float);
+    rotation_speed: Range(float);
+    move_speed: Range(float);
     position: Vector2;
     velocity: Vector2;
     forward: Vector2 = .{1, 0};
@@ -21,7 +21,7 @@ Entity_Type :: enum {
 }
 
 Hurtable :: struct {
-    health: Stat_Range(int);
+    health: Range(int);
     hit_blocks: [..] Block_Info;
 }
 Block_Info :: struct {
@@ -35,8 +35,8 @@ make_block :: (hit_id: Hit_ID, end_time: float64) -> Block_Info {
     return block;
 }
 
-Stat_Range :: struct(T: Type) {
-    union { min: T; minimum: T; }
-    union { max: T; maximum: T; }
+Range :: struct(T: Type) {
+    union { min: T; minimum: T; start: T; }
     union { cur: T; current: T; }
+    union { max: T; maximum: T; end: T; }
 }

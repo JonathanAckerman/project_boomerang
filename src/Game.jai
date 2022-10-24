@@ -26,6 +26,7 @@ game: struct {
 
     particle_system: struct {
         emitters: [..] Particle_Emitter;
+        particles: [..] Particle;
     }
 
     _hit_id: Hit_ID;
@@ -34,64 +35,8 @@ game: struct {
     map: Texture;
 
     test_trigger: Trigger;
-
-    test_particle_emitter1: Particle_Emitter = .{
-        is_active=false,
-        size=.{50, 50}, 
-        max_particles=100,
-        spawn_interval=.01, 
-        spawn_timer=0.0, 
-        decay_interval=1.0, 
-        start_scale=0.1,
-        end_scale=0.3,
-        start_color=WHITE,
-        end_color=GRAY,
-        start_velocity=.{0, -50},
-        acceleration=.{0, -50},
-    };
-    test_particle_emitter2: Particle_Emitter = .{
-        is_active=false,
-        size=.{50, 50}, 
-        max_particles=100,
-        spawn_interval=.01, 
-        spawn_timer=0.0, 
-        decay_interval=1.0, 
-        start_scale=0.2,
-        end_scale=0.6,
-        start_color=WHITE,
-        end_color=GRAY,
-        start_velocity=.{0, -50},
-        acceleration=.{0, -1000},
-    };
-    test_particle_emitter3: Particle_Emitter = .{
-        is_active=false,
-        size=.{100, 100}, 
-        max_particles=100,
-        spawn_interval=.01, 
-        spawn_timer=0.0, 
-        decay_interval=1.0, 
-        start_scale=0.5,
-        end_scale=1.0,
-        start_color=WHITE,
-        end_color=GRAY,
-        start_velocity=.{0, -500},
-        acceleration=.{0, 0},
-    };
-    test_particle_emitter4: Particle_Emitter = .{
-        is_active=false,
-        size=.{10, 10}, 
-        max_particles=100,
-        spawn_interval=.01, 
-        spawn_timer=0.0, 
-        decay_interval=0.5, 
-        start_scale=0.5,
-        end_scale=0.1,
-        start_color=GRAY,
-        end_color=WHITE,
-        start_velocity=.{0, 0},
-        acceleration=.{0, 0},
-    };
 }
+
 Trigger :: struct {
     is_active := true;
     using #as collider: Collider = .{shape=.RECT, position=.{480, 500}, size=.{10, 100}};
@@ -141,10 +86,7 @@ game_loop :: inline () {
         DrawTextPro(the_font, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx the_font.baseSize, 1, WHITE);
     }
 
-    render(test_particle_emitter1);
-    render(test_particle_emitter2);
-    render(test_particle_emitter3);
-    render(test_particle_emitter4);
+    for particle_system.particles { render(it); }
 
     if debug {
         using collision_system;
@@ -177,6 +119,14 @@ game_loop :: inline () {
     array_reset_keeping_memory(*collision_system.catalystboxes);
     array_reset_keeping_memory(*collision_system.triggerboxes);
 
+    // clean up particles
+    for particle_system.particles { 
+        if it.lifetime <= 0.0 {
+            it.emitter.alive_particles -= 1;
+            remove it;
+        }
+    }
+
     cleanup_despawning_entities();
     reset_temporary_storage();
 }
@@ -188,20 +138,16 @@ game_reset :: () {
     load_all_animations();
 
     game = .{};
-    array_reserve(*game.collision_system.hitboxes, 1024);
-    array_reserve(*game.collision_system.hurtboxes, 1024);
-    array_reserve(*game.collision_system.collideboxes, 1024);
+    array_reserve(*collision_system.hitboxes, 1024);
+    array_reserve(*collision_system.hurtboxes, 1024);
+    array_reserve(*collision_system.collideboxes, 1024);
     map = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/grass.png");
 
-    // test particle system
-    array_reserve(*test_particle_emitter1.particles, test_particle_emitter1.max_particles);
-    test_particle_emitter1.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
-    array_reserve(*test_particle_emitter2.particles, test_particle_emitter2.max_particles);
-    test_particle_emitter2.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
-    array_reserve(*test_particle_emitter3.particles, test_particle_emitter3.max_particles);
-    test_particle_emitter3.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
-    array_reserve(*test_particle_emitter4.particles, test_particle_emitter4.max_particles);
-    test_particle_emitter4.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
+    max_particles := 0;
+    for particle_system.emitters {
+        max_particles += it.max_particles;
+    }
+    array_reserve(*particle_system.particles, max_particles);
 
     // init creatures
     {
@@ -212,7 +158,24 @@ game_reset :: () {
         c.weapon.type = .BOOMERANG;
         c.weapon.boomerang.animation = NewAnimation("boomerang/spin");
         c.weapon.boomerang.animation.should_loop = true;
-        c.weapon.boomerang.collidebox.radius = 50.0;
+        c.weapon.boomerang.collidebox.radius = 10.0;
+        e: Particle_Emitter = .{
+            is_active=false,
+            size=.{10, 10}, 
+            max_particles=100,
+            spawn_interval=.01, 
+            spawn_timer=0.0, 
+            decay_interval=0.5, 
+            start_scale=0.5,
+            end_scale=0.1,
+            start_color=GRAY,
+            end_color=WHITE,
+            start_velocity=.{0, 0},
+            acceleration=.{0, 0},
+        };
+        e.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
+        array_add(*particle_system.emitters, e);
+        c.weapon.boomerang.emitter = *particle_system.emitters[particle_system.emitters.count-1];
         player = spawn(c);
     }
 
@@ -261,25 +224,57 @@ game_reset :: () {
 }
 
 on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
-    game.gameplay_paused_until = 2.0;
+    using game;
+    gameplay_paused_until = 2.0;
 
     c := Creatures.SMALL_FRY;
     c.position = .{700, 700};
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("small_fry/idle"));
     spawn(c);
-    game.test_particle_emitter1.is_active=true;
-    game.test_particle_emitter1.position=c.position;
-    game.test_particle_emitter1.deactivate_timer=1.0;
+    e: Particle_Emitter;
+    e = .{
+        is_active=true,
+        deactivate_timer=1.0,
+        size=.{50, 50}, 
+        max_particles=100,
+        spawn_interval=.01, 
+        spawn_timer=0.0, 
+        decay_interval=1.0, 
+        start_scale=0.1,
+        end_scale=0.3,
+        start_color=WHITE,
+        end_color=GRAY,
+        start_velocity=.{0, -50},
+        acceleration=.{0, -50},
+    };
+    e.position=c.position;
+    e.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
+    array_add(*particle_system.emitters, e);
 
     c = Creatures.MEDIUM_FRY;
     c.position = .{800, 700};
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("medium_fry/idle"));
     spawn(c);
-    game.test_particle_emitter2.is_active=true;
-    game.test_particle_emitter2.position=c.position;
-    game.test_particle_emitter2.deactivate_timer=1.0;
+    e = .{
+        is_active=true,
+        deactivate_timer=1.0,
+        size=.{50, 50}, 
+        max_particles=100,
+        spawn_interval=.01, 
+        spawn_timer=0.0, 
+        decay_interval=1.0, 
+        start_scale=0.2,
+        end_scale=0.6,
+        start_color=WHITE,
+        end_color=GRAY,
+        start_velocity=.{0, -50},
+        acceleration=.{0, -1000},
+    };
+    e.position=c.position;
+    e.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
+    array_add(*particle_system.emitters, e);
 
     c = Creatures.BIG_FRY;
     c.position = .{1000, 700};
@@ -287,9 +282,24 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     array_add(*c.animations, NewAnimation("big_fry/idle"));
     c.on_death = end_arena;
     spawn(c);
-    game.test_particle_emitter3.is_active=true;
-    game.test_particle_emitter3.position=c.position;
-    game.test_particle_emitter3.deactivate_timer=1.0;
+    e = .{
+        is_active=true,
+        deactivate_timer=1.0,
+        size=.{100, 100}, 
+        max_particles=100,
+        spawn_interval=.01, 
+        spawn_timer=0.0, 
+        decay_interval=1.0, 
+        start_scale=0.5,
+        end_scale=1.0,
+        start_color=WHITE,
+        end_color=GRAY,
+        start_velocity=.{0, -500},
+        acceleration=.{0, 0},
+    };
+    e.position=c.position;
+    e.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
+    array_add(*particle_system.emitters, e);
 
     w: Wall;
     w.position = .{400, 500};
@@ -311,14 +321,13 @@ simulate :: () {
     for _Wall     simulate(it);
     for _Creature simulate(it);
 
-        emit(*test_particle_emitter1);
-    simulate(*test_particle_emitter1);
-        emit(*test_particle_emitter2);
-    simulate(*test_particle_emitter2);
-        emit(*test_particle_emitter3);
-    simulate(*test_particle_emitter3);
-        emit(*test_particle_emitter4);
-    simulate(*test_particle_emitter4);
+    for * particle_system.emitters {
+        emit(it);
+        simulate(it);
+    }
+    for * particle_system.particles {
+        simulate(it);
+    }
 
     player_obj, _ := from_handle(player); 
     camera.position = player_obj.position;
@@ -351,9 +360,9 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
             if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .BOUNCING;
             weapon.boomerang.hit_id = game.get_next_hit_id();
 
-            print("collision with: %\n", other);
-            print("normal: %\n", collision.normal);
-            print("velocity: %\n", weapon.boomerang.velocity);
+            // print("collision with: %\n", other);
+            // print("normal: %\n", collision.normal);
+            // print("velocity: %\n", weapon.boomerang.velocity);
 
             inv_velocity := weapon.boomerang.velocity * -1.0;
             incidence_angle := acos(dot(inv_velocity, collision.normal) / length(inv_velocity));
@@ -367,7 +376,7 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
                 }
                 if v < n then incidence_angle *= -1.0;
             }
-            print("angle: %\n", incidence_angle);
+            // print("angle: %\n", incidence_angle);
 
             weapon.boomerang.velocity = unit_vector(rotate_vector(collision.normal, incidence_angle)) * weapon.boomerang.move_speed;
             weapon.boomerang.start_position = weapon.boomerang.position;
