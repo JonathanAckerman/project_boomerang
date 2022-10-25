@@ -40,7 +40,7 @@ game: struct {
 
 Trigger :: struct {
     is_active := true;
-    using #as collider: Collider = .{shape=.RECT, position=.{480, 500}, size=.{10, 100}};
+    using #as collider: Collider = .{shape=.RECT, position=.{530, 550}, size=.{10, 100}};
 }
 
 frame: struct {
@@ -184,42 +184,26 @@ game_reset :: () {
     // init walls
     {
         w: Wall;
-        w.position = .{400, 400};
+        w.position = .{1000, 505};
         array_add(*w.animations, NewAnimation("wall/idle"));
         w.has_collider = true;
         w.collider.shape = .RECT;
-        w.collider.size = .{100, 100};
+        w.collider.size = .{1000, 10};
         w.has_rigidbody = true;
         w.entity_type = .WALL;
         spawn(w);
 
-        for i: 0..8 {
-            w.position.x += 100;
-            w.entity_type = .WALL;
-            spawn(w);
-        }
-        for i: 0..8 {
-            w.position.y += 100;
-            w.entity_type = .WALL;
-            spawn(w);
-        }
-        for i: 0..8 {
-            w.position.x -= 100;
-            w.entity_type = .WALL;
-            spawn(w);
-        }
-        for i: 0..6 {
-            w.position.y -= 100;
-            w.entity_type = .WALL;
-            spawn(w);
-        }
+        w.position = .{1000, 1495};
+        w.entity_type = .WALL;
+        spawn(w);
 
-        w.position = .{200, 200};
-        array_add(*w.animations, NewAnimation("wall/idle"));
-        w.has_collider = true;
-        w.collider.shape = .CIRCLE;
-        w.collider.radius = 50;
-        w.has_rigidbody = true;
+        w.position = .{1500, 1000};
+        w.collider.size = .{10, 1000};
+        w.entity_type = .WALL;
+        spawn(w);
+
+        w.position = .{500, 1050};
+        w.collider.size = .{10, 900};
         w.entity_type = .WALL;
         spawn(w);
     }
@@ -306,11 +290,11 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     array_add(*particle_system.emitters, e);
 
     w: Wall;
-    w.position = .{400, 500};
+    w.position = .{500, 550};
     array_add(*w.animations, NewAnimation("wall/idle"));
     w.has_collider = true;
     w.collider.shape = .RECT;
-    w.collider.size = .{100, 100};
+    w.collider.size = .{10, 100};
     w.has_rigidbody = true;
     w.entity_type = .WALL;
     spawn(w);
