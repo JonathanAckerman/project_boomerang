@@ -31,7 +31,7 @@ Weapon :: struct {
             travel_distance := 500.0;
             collidebox: Collidebox;
             hit_id: Hit_ID;
-            tick_rate: float64 = 0.5;
+            tick_rate := 0.5;
             emitter: *Particle_Emitter;
         }
 
@@ -89,7 +89,10 @@ simulate :: (using creature: *Creature) {
     // @TEMP: for now make the physics collidebox also be the hurtbox
     hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
     produce_hurtbox(collider, *hurtable, creature, hit_response);
-    for hurtable.hit_blocks if frame.time >= it.end_time then remove it;
+    for * hurtable.hit_blocks {
+        it.timer -= frame.dt;
+        if it.timer <= 0.0 then remove it;
+    }
 
     // respond to Attack input
     if try_attack {

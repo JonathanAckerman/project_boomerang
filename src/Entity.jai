@@ -26,12 +26,12 @@ Hurtable :: struct {
 }
 Block_Info :: struct {
     hit_id: Hit_ID;
-    end_time: float64;
+    timer: float;
 }
-make_block :: (hit_id: Hit_ID, end_time: float64) -> Block_Info {
+make_block :: (hit_id: Hit_ID, timer: float) -> Block_Info {
     block: Block_Info;
     block.hit_id = hit_id;
-    block.end_time = end_time;
+    block.timer = timer;
     return block;
 }
 

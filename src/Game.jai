@@ -46,7 +46,6 @@ Trigger :: struct {
 frame: struct {
     dt: float;
     scale: float = 1.0;
-    time: float64;
 }
 
 Game_State :: enum {
@@ -56,7 +55,6 @@ Game_State :: enum {
 game_loop :: inline () {
     using game;
     using context.entity_storage;
-    frame.time = GetTime();
     frame.dt = GetFrameTime() * frame.scale;
     game.gameplay_paused_until -= frame.dt / frame.scale;
 
@@ -172,6 +170,7 @@ game_reset :: () {
     load_all_fonts();
 
     game = .{};
+    frame = .{};
     array_reserve(*collision_system.hitboxes, 1024);
     array_reserve(*collision_system.hurtboxes, 1024);
     array_reserve(*collision_system.collideboxes, 1024);
@@ -192,7 +191,7 @@ game_reset :: () {
         c.weapon.type = .BOOMERANG;
         c.weapon.boomerang.animation = NewAnimation("boomerang/spin");
         c.weapon.boomerang.animation.should_loop = true;
-        c.weapon.boomerang.collidebox.radius = 10.0;
+        c.weapon.boomerang.collidebox.radius = 50.0;
         c.weapon.boomerang.bounces = .{min=0, cur=2, max=2};
         e: Particle_Emitter = .{
             is_active=false,
@@ -366,12 +365,12 @@ player_on_hit :: (hurtable: *Hurtable, hit: Hit) {
 enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
     for hurtable.hit_blocks if it.hit_id == hit.id return;
 
-    array_add(*hurtable.hit_blocks, make_block(hit.id, GetTime() + hit.tick_rate));
+    array_add(*hurtable.hit_blocks, make_block(hit.id, hit.tick_rate));
     if hurtable.health.cur > hurtable.health.min {
         hurtable.health.cur -= hit.damage;
         game.slowmo = .{
             is_active = true,
-            scale = 0.2,
+            scale = 0.1,
             attack = 0.01,
             sustain = 0.01,
             decay = 0.01,

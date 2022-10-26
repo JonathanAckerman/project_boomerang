@@ -19,14 +19,14 @@ Hit :: struct {
     damage: int;
     damage_type: Damage_Type;
     id: Hit_ID;
-    tick_rate: float64;
+    tick_rate: float;
 }
 Damage_Type :: enum {
     NORMAL;
     FIRE;
     OCCULT;
 }
-make_hit :: (id: Hit_ID, damage: int, damage_type: Damage_Type = .NORMAL, tick_rate: float64) -> Hit {
+make_hit :: (id: Hit_ID, damage: int, damage_type: Damage_Type = .NORMAL, tick_rate: float) -> Hit {
     hit: Hit;
     hit.damage = damage;
     hit.damage_type = damage_type;
