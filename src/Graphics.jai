@@ -24,3 +24,87 @@ world_to_screen :: (world: Vector2) -> screen: Vector2 {
     to_ss_vector := WINDOW_CENTER - game.camera.position * game.camera.zoom;
     return world * game.camera.zoom + to_ss_vector;
 }
+
+draw_buffer: [..] Draw_Buffer_Item;
+
+Draw_Buffer_Item :: struct {
+    traunch: Draw_Traunch;
+    type: item_type;
+    item_type :: enum { ANIM; TEX; DEBUG; }
+    union {
+        using animation: struct {
+            position: Vector2;
+            rotation: float;
+            frame: Animation_Frame;
+        }
+        texture: struct {
+            texture: *Texture;
+            position: Vector2;
+            rotation: float;
+            color: Color;
+            scale: float;
+        }
+        debug: struct {
+            debug_shape :: enum { CIRCLE; LINE; RECT; }
+            shape: debug_shape;
+            position: Vector2;
+            radius: float;
+            end_point: Vector2;
+            size: Vector2;
+            color: Color;
+        }
+    }
+}
+
+Draw_Traunch :: enum {
+    BACKGROUND;
+    ENTITY;
+    WORLD_UI;
+    SCREEN_UI;
+    DEBUG;
+    EDITOR;
+}
+
+add_to_draw_buffer :: (shape: Draw_Buffer_Item.debug.debug_shape, position: Vector2, radius: float, color: Color) {
+    buffered: Draw_Buffer_Item;
+    buffered.debug.shape = shape;
+    buffered.debug.position = position;
+    buffered.debug.radius = radius;
+    buffered.debug.color = color;
+    buffered.traunch = .DEBUG;
+    buffered.type = .DEBUG;
+    array_add(*draw_buffer, buffered);
+}
+add_to_draw_buffer :: (shape: Draw_Buffer_Item.debug.debug_shape, position: Vector2, end_point: Vector2, color: Color) {
+    buffered: Draw_Buffer_Item;
+    buffered.debug.shape = shape;
+    buffered.debug.position = position;
+    if shape == .LINE then buffered.debug.end_point = end_point;
+    else buffered.debug.size = end_point;
+    buffered.debug.color = color;
+    buffered.traunch = .DEBUG;
+    buffered.type = .DEBUG;
+    array_add(*draw_buffer, buffered);
+}
+
+add_to_draw_buffer :: (frame: Animation_Frame, position: Vector2, traunch: Draw_Traunch, forward: Vector2, scale: float = 1.0) {
+    buffered: Draw_Buffer_Item;
+    buffered.frame = frame;
+    buffered.frame.size *= scale;
+    buffered.position = position;
+    buffered.rotation = atan2(-forward.y, forward.x);
+    buffered.traunch = traunch;
+    buffered.type = .ANIM;
+    array_add(*draw_buffer, buffered);
+}
+add_to_draw_buffer :: (texture: *Texture, position: Vector2, traunch: Draw_Traunch, forward: Vector2, color: Color, scale: float = 1.0) {
+    buffered: Draw_Buffer_Item;
+    buffered.texture.texture = texture;
+    buffered.texture.position = position;
+    buffered.texture.rotation = atan2(-forward.y, forward.x);
+    buffered.texture.color = color;
+    buffered.texture.scale = scale;
+    buffered.traunch = traunch;
+    buffered.type = .TEX;
+    array_add(*draw_buffer, buffered);
+}

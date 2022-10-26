@@ -80,14 +80,6 @@ game_loop :: inline () {
     for _Wall     render(it);
     for _Creature render(it);
 
-    DrawFPS(0, 0);
-
-    {
-        cstr := temp_c_string("PROJECT BOOMERANG");
-        measure := MeasureTextEx(the_font, cstr, xx the_font.baseSize, 1);
-        DrawTextPro(the_font, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx the_font.baseSize, 1, WHITE);
-    }
-
     for particle_system.particles { render(it); }
 
     if debug {
@@ -103,14 +95,43 @@ game_loop :: inline () {
                 ss_pos := world_to_screen(it.position);
                 if it.shape == {
                     case .CIRCLE;
-                        DrawCircleLines(xx ss_pos.x, xx ss_pos.y, xx it.radius, color);
+                        add_to_draw_buffer(.CIRCLE, ss_pos, it.radius, color);
                     case .RECT;
-                        ss_pos -= it.size/2.0;
-                        DrawRectangleLines(xx ss_pos.x, xx ss_pos.y, xx it.size.x, xx it.size.y, color);
+                        add_to_draw_buffer(.RECT, ss_pos, it.size, color);
                 }
             }
         }
     }
+
+    // Sort draw_buffer
+    less_than :: (a, b) => cast(s64)a.traunch - cast(s64)b.traunch;
+    bubble_sort(draw_buffer, less_than);
+
+    for draw_buffer {
+        is_screen_space := it.traunch == .SCREEN_UI;
+        position := ifx is_screen_space
+            then it.position
+            else world_to_screen(it.position);
+
+        if it.type == {
+            case .DEBUG;
+                using it.debug;
+                if shape == {
+                    case .CIRCLE;
+                        DrawCircleLines(xx position.x, xx position.y, xx radius, color);
+                    case .LINE;
+                        DrawLineV(position, end_point, color);
+                    case .RECT;
+                        DrawRectangleLines(xx (position.x - size.x/2), xx (position.y - size.y/2), xx size.x, xx size.y, color);
+                }
+            case .TEX;
+                using it.texture;
+                draw_texture_centered_with_rotation(texture, ss(position), rotation, scale, color);
+            case .ANIM;
+                draw_texture_centered_with_rotation(it.frame, position, it.rotation, is_screen_space);
+        } 
+    }
+    array_reset_keeping_memory(*draw_buffer);
 
     EndDrawing();
 
@@ -161,6 +182,7 @@ game_reset :: () {
         c.weapon.boomerang.animation = NewAnimation("boomerang/spin");
         c.weapon.boomerang.animation.should_loop = true;
         c.weapon.boomerang.collidebox.radius = 10.0;
+        c.weapon.boomerang.bounces = .{min=0, cur=2, max=2};
         e: Particle_Emitter = .{
             is_active=false,
             size=.{10, 10}, 
@@ -188,7 +210,7 @@ game_reset :: () {
         array_add(*w.animations, NewAnimation("wall/idle"));
         w.has_collider = true;
         w.collider.shape = .RECT;
-        w.collider.size = .{1000, 10};
+        w.collider.size = .{1000, 100};
         w.has_rigidbody = true;
         w.entity_type = .WALL;
         spawn(w);
@@ -198,12 +220,12 @@ game_reset :: () {
         spawn(w);
 
         w.position = .{1500, 1000};
-        w.collider.size = .{10, 1000};
+        w.collider.size = .{100, 1000};
         w.entity_type = .WALL;
         spawn(w);
 
         w.position = .{500, 1050};
-        w.collider.size = .{10, 900};
+        w.collider.size = .{100, 900};
         w.entity_type = .WALL;
         spawn(w);
     }
@@ -294,7 +316,7 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     array_add(*w.animations, NewAnimation("wall/idle"));
     w.has_collider = true;
     w.collider.shape = .RECT;
-    w.collider.size = .{10, 100};
+    w.collider.size = .{100, 100};
     w.has_rigidbody = true;
     w.entity_type = .WALL;
     spawn(w);
@@ -359,26 +381,36 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
             if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .BOUNCING;
             weapon.boomerang.hit_id = game.get_next_hit_id();
 
+            if weapon.boomerang.bounces.cur == weapon.boomerang.bounces.min {
+                weapon.boomerang.status = .RETURNING;
+                return;
+            }
+
             // print("collision with: %\n", other);
             // print("normal: %\n", collision.normal);
             // print("velocity: %\n", weapon.boomerang.velocity);
 
-            inv_velocity := weapon.boomerang.velocity * -1.0;
-            incidence_angle := acos(dot(inv_velocity, collision.normal) / length(inv_velocity));
+            if length(weapon.boomerang.velocity) > 0.0
             {
-                v := atan2(-inv_velocity.y, inv_velocity.x);
-                n := atan2(-collision.normal.y, collision.normal.x);
-                // @TODO: fix this jank
-                if collision.normal == .{-1, 0} {
-                    if v > n then n = PI;        // since atan2 wraps at PI
-                    if v < 0 then v += 2.0 * PI; // since atan2 wraps at PI
+                inv_velocity := weapon.boomerang.velocity * -1.0;
+                incidence_angle := acos(dot(inv_velocity, collision.normal) / length(inv_velocity));
+                {
+                    v := atan2(-inv_velocity.y, inv_velocity.x);
+                    n := atan2(-collision.normal.y, collision.normal.x);
+                    // @TODO: fix this jank
+                    if collision.normal == .{-1, 0} {
+                        if v > n then n = PI;        // since atan2 wraps at PI
+                        if v < 0 then v += 2.0 * PI; // since atan2 wraps at PI
+                    }
+                    if v < n then incidence_angle *= -1.0;
                 }
-                if v < n then incidence_angle *= -1.0;
-            }
-            // print("angle: %\n", incidence_angle);
+                // print("angle: %\n", incidence_angle);
 
-            weapon.boomerang.velocity = unit_vector(rotate_vector(collision.normal, incidence_angle)) * weapon.boomerang.move_speed;
-            weapon.boomerang.start_position = weapon.boomerang.position;
+                weapon.boomerang.velocity = unit_vector(rotate_vector(collision.normal, incidence_angle)) * weapon.boomerang.move_speed;
+                weapon.boomerang.start_position = weapon.boomerang.position;
+            }
+
+            weapon.boomerang.bounces.cur -= 1;
     }
 
 }

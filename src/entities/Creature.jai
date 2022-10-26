@@ -26,6 +26,7 @@ Weapon :: struct {
             position: Vector2;
             velocity: Vector2;
             start_position: Vector2;
+            bounces: Range(int);
             move_speed := 500.0;
             travel_distance := 500.0;
             collidebox: Collidebox;
@@ -139,6 +140,7 @@ simulate :: (using creature: *Creature) {
                 direction := position - boomerang.position;
                 boomerang.velocity = unit_vector(direction) * boomerang.move_speed;
                 if length(boomerang.position - position) < 10.0 {
+                    boomerang.bounces.cur = boomerang.bounces.max;
                     boomerang.status = .SHEATHED;
                     boomerang.emitter.is_active = false;
                 }
@@ -157,14 +159,14 @@ simulate :: (using creature: *Creature) {
 
 render :: (using creature: *Creature) {
     for * animations update_animation(it);
-    draw_texture_centered_with_rotation(Current_Frame(animations[0]), world_to_screen(position), atan2(-forward.y, forward.x));
+    add_to_draw_buffer(Current_Frame(animations[0]), position, .ENTITY, forward);
 
     if weapon.type == {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
             if boomerang.status != .SHEATHED {
                 if !game.paused && !game.is_gameplay_paused() then update_animation(*boomerang.animation);
-                draw_texture_centered_with_rotation(Current_Frame(boomerang.animation), world_to_screen(boomerang.position), 0.0);
+                add_to_draw_buffer(Current_Frame(boomerang.animation), boomerang.position, .ENTITY, .{0,-1}); // @Note: boomerang has a hardcoded forward
             }
     }
 }

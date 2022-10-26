@@ -86,5 +86,6 @@ simulate :: (using particle: *Particle) {
 
 render :: (using particle: Particle) {
     // @Jay: maybe we need to sort these by some metric like lifetime
-    draw_texture_centered_with_rotation(emitter.texture, world_to_screen(position), 0.0, scale, color);
+    // draw_texture_centered_with_rotation(emitter.texture, world_to_screen(position), 0.0, scale, color);
+    add_to_draw_buffer(*emitter.texture, position, .WORLD_UI, .{0,-1}, color, scale);
 }

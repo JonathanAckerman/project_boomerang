@@ -13,5 +13,5 @@ simulate :: (using wall: *Wall) {
 
 render :: (using wall: *Wall) {
     for * animations update_animation(it);
-    draw_texture_centered_with_rotation(Current_Frame(animations[0]), world_to_screen(position), atan2(-forward.y, forward.x));
+    add_to_draw_buffer(Current_Frame(animations[0]), position, .ENTITY, forward);
 }
