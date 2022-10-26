@@ -104,10 +104,10 @@ game_loop :: inline () {
     }
 
     {
-        cstr := temp_c_string("PROJECT BOOMERANG");
+        str := "PROJECT BOOMERANG";
         courier_new := table_find_pointer(*Fonts.table, "courier_new");
-        measure := MeasureTextEx(courier_new, cstr, xx courier_new.baseSize, 1);
-        DrawTextPro(courier_new, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx courier_new.baseSize, 1, WHITE);
+        measure := MeasureTextEx(courier_new, temp_c_string(str), xx courier_new.baseSize, 1);
+        add_to_draw_buffer(.SCREEN_UI, courier_new, str, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, xx measure, xx courier_new.baseSize, 1, WHITE);
     }
 
     // Sort draw_buffer
@@ -131,11 +131,14 @@ game_loop :: inline () {
                     case .RECT;
                         DrawRectangleLines(xx (position.x - size.x/2), xx (position.y - size.y/2), xx size.x, xx size.y, color);
                 }
-            case .TEX;
+            case .TEXTURE;
                 using it.texture;
                 draw_texture_centered_with_rotation(texture, ss(position), rotation, scale, color);
             case .ANIM;
                 draw_texture_centered_with_rotation(it.frame, position, it.rotation, is_screen_space);
+            case .TEXT;
+                using it.text;
+                DrawTextPro(font, temp_c_string(str), position, origin, rotation, size, spacing, color);
         } 
     }
     array_reset_keeping_memory(*draw_buffer);

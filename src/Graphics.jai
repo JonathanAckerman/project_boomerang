@@ -30,7 +30,7 @@ draw_buffer: [..] Draw_Buffer_Item;
 Draw_Buffer_Item :: struct {
     traunch: Draw_Traunch;
     type: item_type;
-    item_type :: enum { ANIM; TEX; DEBUG; }
+    item_type :: enum { ANIM; TEXTURE; DEBUG; TEXT; }
     union {
         using animation: struct {
             position: Vector2;
@@ -52,6 +52,16 @@ Draw_Buffer_Item :: struct {
             end_point: Vector2;
             size: Vector2;
             color: Color;
+        }
+        text: struct {
+            font: Font;
+            str: string;
+            position: Vector2;
+            origin: Vector2;
+            size: float;
+            spacing: float;
+            color: Color;
+            rotation: float;
         }
     }
 }
@@ -105,6 +115,21 @@ add_to_draw_buffer :: (texture: *Texture, position: Vector2, traunch: Draw_Traun
     buffered.texture.color = color;
     buffered.texture.scale = scale;
     buffered.traunch = traunch;
-    buffered.type = .TEX;
+    buffered.type = .TEXTURE;
+    array_add(*draw_buffer, buffered);
+}
+
+add_to_draw_buffer :: (traunch: Draw_Traunch, font: Font, str: string, position: Vector2, origin: Vector2, size: float, spacing: float, color: Color, rotation: float = 0) {
+    buffered: Draw_Buffer_Item;
+    buffered.traunch = traunch;
+    buffered.text.font = font;
+    buffered.text.str = str;
+    buffered.text.position = position;
+    buffered.text.origin = origin;
+    buffered.text.size = size;
+    buffered.text.spacing = spacing;
+    buffered.text.color = color;
+    buffered.text.rotation = rotation;
+    buffered.type = .TEXT;
     array_add(*draw_buffer, buffered);
 }
