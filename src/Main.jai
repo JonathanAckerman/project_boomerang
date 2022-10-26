@@ -9,7 +9,6 @@ main :: () {
     // SetExitKey(0); // for now leave esc it makes it faster to debug
     SetTraceLogLevel(xx TraceLogLevel.LOG_NONE);
     SetMouseCursor(xx MouseCursor.CROSSHAIR);
-    the_font = LoadFont(temp_c_string("assets/font/mecha.png"));
 
     game.resetting = true;
     while game.resetting {
@@ -19,14 +18,13 @@ main :: () {
     CloseWindow();
 }
 
-the_font: Font;
-
 #load "Entity.jai";
 #load "Game.jai";
 #load "Input.jai";
 #load "Utils.jai";
 #load "Animation.jai";
 #load "Graphics.jai";
+#load "Fonts.jai";
 #load "AI.jai";
 #load "Collision.jai";
 #load "Particles.jai";

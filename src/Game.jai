@@ -103,6 +103,13 @@ game_loop :: inline () {
         }
     }
 
+    {
+        cstr := temp_c_string("PROJECT BOOMERANG");
+        courier_new := table_find_pointer(*Fonts.table, "courier_new");
+        measure := MeasureTextEx(courier_new, cstr, xx courier_new.baseSize, 1);
+        DrawTextPro(courier_new, cstr, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, measure, 0, xx courier_new.baseSize, 1, WHITE);
+    }
+
     // Sort draw_buffer
     less_than :: (a, b) => cast(s64)a.traunch - cast(s64)b.traunch;
     bubble_sort(draw_buffer, less_than);
@@ -159,6 +166,7 @@ game_reset :: () {
     log("RESETTING GAME");
     reset_entity_storage();
     load_all_animations();
+    load_all_fonts();
 
     game = .{};
     array_reserve(*collision_system.hitboxes, 1024);
