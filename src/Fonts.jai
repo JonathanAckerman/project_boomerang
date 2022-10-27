@@ -1,7 +1,17 @@
 #insert #run _compile_fonts();
 
 #scope_file // ---------------------------------------------------------------------------
-_FONTS_PATH :: "C:/jai/sandbox/project_boomerang/assets/fonts";
+
+#no_reset _fonts_path: string;
+#run {
+    sb: String_Builder; defer free_buffers(*sb);
+    cwd := get_working_directory();
+    replace_chars(cwd, "\\", #char "/");
+    append(*sb, cwd);
+    append(*sb, "/assets/fonts");
+    _fonts_path = builder_to_string(*sb);
+}
+
 _font_table: Table(string, string);
 
 _get_fonts :: (info: *File_Visit_Info, data: *[..] string) {
@@ -10,11 +20,11 @@ _get_fonts :: (info: *File_Visit_Info, data: *[..] string) {
 // Fill the table in Fonts with (key=font_name, value=font_path)
 _get_all_fonts :: () {
     font_files: [..] string;
-    visit_files(_FONTS_PATH, false, *font_files, _get_fonts, true, false);
+    visit_files(_fonts_path, false, *font_files, _get_fonts, true, false);
 
     for font_files {
         value := it;
-        success, path, key := split_from_left(it, tprint("%/", _FONTS_PATH));
+        success, path, key := split_from_left(it, tprint("%/", _fonts_path));
         if success {
             key.count -= 4;
             table_add(*_font_table, key, value);
