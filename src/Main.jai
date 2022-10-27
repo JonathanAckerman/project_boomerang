@@ -38,8 +38,9 @@ main :: () {
 #import "File";
 #import "File_Utilities";   // File_Visit_Info
 #import "Hash_Table";       // Table
-#import "String";           // slice()
+#import "String";           // slice(), path_strip_filename()
 #import "Sort";
+#import "System";           // get_path_of_running_executable()
 
 #import "Entity_Storage";
 #import "Raylib-Jai";

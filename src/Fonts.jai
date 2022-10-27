@@ -1,28 +1,29 @@
-FONTS_PATH :: "C:/jai/sandbox/project_boomerang/assets/fonts";
+#insert #run _compile_fonts();
 
+#scope_file // ---------------------------------------------------------------------------
+_FONTS_PATH :: "C:/jai/sandbox/project_boomerang/assets/fonts";
 _font_table: Table(string, string);
-#insert #run compile_fonts();
 
+_get_fonts :: (info: *File_Visit_Info, data: *[..] string) {
+    array_add(data, copy_string(info.full_name));
+}
 // Fill the table in Fonts with (key=font_name, value=font_path)
-get_all_fonts :: () {
+_get_all_fonts :: () {
     font_files: [..] string;
-    visit_files(FONTS_PATH, false, *font_files, _get_fonts, true, false);
+    visit_files(_FONTS_PATH, false, *font_files, _get_fonts, true, false);
 
     for font_files {
         value := it;
-        success, path, key := split_from_left(it, tprint("%/", FONTS_PATH));
+        success, path, key := split_from_left(it, tprint("%/", _FONTS_PATH));
         if success {
             key.count -= 4;
             table_add(*_font_table, key, value);
         }
     }
 }
-_get_fonts :: (info: *File_Visit_Info, data: *[..] string) {
-    array_add(data, copy_string(info.full_name));
-}
 
-compile_fonts :: () -> string {
-    get_all_fonts(); // we'll do this again at runtime when we need to load the fonts
+_compile_fonts :: () -> string {
+    _get_all_fonts(); // we'll do this again at runtime when we need to load the fonts
     sb: String_Builder; defer free_buffers(*sb);
 
     // generate the fonts struct
