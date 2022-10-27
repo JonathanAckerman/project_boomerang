@@ -124,7 +124,10 @@ game_loop :: inline () {
     {
         str := "PROJECT BOOMERANG";
         measure := MeasureTextEx(fonts.courier_new, temp_c_string(str), xx fonts.courier_new.baseSize, 1);
-        add_to_draw_buffer(.SCREEN_UI, fonts.courier_new, str, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, xx measure, xx fonts.courier_new.baseSize, 1, WHITE);
+        add_to_draw_buffer(.SCREEN_UI, fonts.courier_new, str, .{WINDOW_WIDTH-2, WINDOW_HEIGHT} - xy(0, measure.y/2), xx measure, xx fonts.courier_new.baseSize, 1, WHITE);
+        str = "SECOND FONT";
+        measure = MeasureTextEx(fonts.mecha, temp_c_string(str), xx fonts.mecha.baseSize + 4.0, 12);
+        add_to_draw_buffer(.SCREEN_UI, fonts.mecha, str, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, xx measure, xx fonts.mecha.baseSize + 4.0, 12, PINK);
     }
 
     // Sort draw_buffer
