@@ -58,10 +58,30 @@ game_loop :: inline () {
     frame.dt = GetFrameTime() * frame.scale;
     game.gameplay_paused_until -= frame.dt / frame.scale;
 
-    // simulate ----------------------------------------------------------------
-    handle_input();
+    // Update the objects in the application
+    // ---------------------------------------------------------------------------------------
+    for _Wall     update(it);
+    for _Creature update(it);
+    
+    // Simulate the game rules, updating just the game state
+    // ---------------------------------------------------------------------------------------
+    handle_input(); // @Note: eventually we'll want input that isn't related to the game state
 
-    simulate();
+    simulate(*slowmo);
+
+    for _Wall     simulate(it);
+    for _Creature simulate(it);
+
+    for * particle_system.emitters {
+        emit(it);
+        simulate(it);
+    }
+    for * particle_system.particles {
+        simulate(it);
+    }
+
+    player_obj, _ := from_handle(player); 
+    camera.position = player_obj.position;
 
     if test_trigger.is_active {
         produce_triggerbox(test_trigger, *test_trigger, on_trigger_fight);
@@ -332,27 +352,6 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     spawn(w);
 
     (cast(*Trigger) trigger.owner).is_active = false;
-}
-
-simulate :: () {
-    using game;
-    using context.entity_storage;
-
-    simulate(*slowmo);
-    
-    for _Wall     simulate(it);
-    for _Creature simulate(it);
-
-    for * particle_system.emitters {
-        emit(it);
-        simulate(it);
-    }
-    for * particle_system.particles {
-        simulate(it);
-    }
-
-    player_obj, _ := from_handle(player); 
-    camera.position = player_obj.position;
 }
 
 player_on_hit :: (hurtable: *Hurtable, hit: Hit) {

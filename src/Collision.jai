@@ -114,6 +114,7 @@ produce_triggerbox :: (collider: Collider, owner: *void, on_trigger: (Catalystbo
 
 handle_collision :: () {
     using game.collision_system;
+    if game.paused || game.is_gameplay_paused() return;
 
     for * a: collideboxes {
         is_colliding := false;

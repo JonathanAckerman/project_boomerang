@@ -61,6 +61,33 @@ Creature_Type :: enum {
     BIG_FRY;
 }
 
+update :: (using creature: *Creature) {
+    if has_collider {
+        collider.position = position;
+        produce_collidebox(collider, creature, creature_on_collision_started, creature_on_collision);
+    }
+
+    if !has_ai then produce_catalystbox(collider, creature);
+
+    // @TEMP: for now make the physics collidebox also be the hurtbox
+    hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
+    produce_hurtbox(collider, *hurtable, creature, hit_response);
+
+    if weapon.type == {
+        case .BOOMERANG;
+            boomerang := *weapon.boomerang;
+            if boomerang.status != .SHEATHED {
+                // @TEMP: use collidebox for hitbox
+                produce_hitbox(boomerang.collidebox.collider, creature, make_hit(boomerang.hit_id, 1, tick_rate=boomerang.tick_rate));
+                boomerang.collidebox.position = boomerang.position;
+            }
+
+            if boomerang.status == .LEAVING || boomerang.status == .BOUNCING {
+                produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
+            }
+    }
+}
+
 simulate :: (using creature: *Creature) {
     if game.paused || game.is_gameplay_paused() return;
 
@@ -71,24 +98,15 @@ simulate :: (using creature: *Creature) {
     }
 
     position += velocity * frame.dt;
-    if has_collider {
-        collider.position = position;
-        produce_collidebox(collider, creature, creature_on_collision_started, creature_on_collision);
-    }
 
-    alignment := dot(forward, forward_intended);
     if has_ai {
         update_ai(creature);
         forward = lerp(forward, forward_intended, rotation_speed.cur * frame.dt);
     }
     else {
         forward = forward_intended;
-        produce_catalystbox(collider, creature);
     }
 
-    // @TEMP: for now make the physics collidebox also be the hurtbox
-    hit_response := ifx has_ai then enemy_on_hit else player_on_hit;
-    produce_hurtbox(collider, *hurtable, creature, hit_response);
     for * hurtable.hit_blocks {
         it.timer -= frame.dt;
         if it.timer <= 0.0 then remove it;
@@ -121,12 +139,6 @@ simulate :: (using creature: *Creature) {
             boomerang := *weapon.boomerang;
             if boomerang.status != .SHEATHED {
                 boomerang.position += boomerang.velocity * frame.dt;
-                for boomerang.animation.frames {
-                    // for it.hitboxes produce_hitbox(it.collider, creature, it.hit);
-                    // @TEMP: use collidebox for hitbox
-                    produce_hitbox(boomerang.collidebox.collider, creature, make_hit(boomerang.hit_id, 1, tick_rate=boomerang.tick_rate));
-                }
-                boomerang.collidebox.position = boomerang.position;
                 boomerang.emitter.position = boomerang.position;
             }
 
@@ -135,8 +147,6 @@ simulate :: (using creature: *Creature) {
                     boomerang.status = .RETURNING;
                     boomerang.hit_id = game.get_next_hit_id();
                 }
-
-                produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
             } 
             
             if boomerang.status == .RETURNING {
@@ -159,8 +169,6 @@ simulate :: (using creature: *Creature) {
                     boomerang.status = .SHEATHED;
                     boomerang.emitter.is_active = false;
                 }
-
-                produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
             }
     }
 }
