@@ -25,6 +25,7 @@ main :: () {
 #load "Animation.jai";
 #load "Graphics.jai";
 #load "Fonts.jai";
+#load "Serialize.jai";
 #load "AI.jai";
 #load "Collision.jai";
 #load "Particles.jai";
@@ -34,6 +35,7 @@ main :: () {
 #import "Basic";
 #import "Random";
 #import "Bucket_Array";
+#import "File";
 #import "File_Utilities";   // File_Visit_Info
 #import "Hash_Table";       // Table
 #import "String";           // slice()
