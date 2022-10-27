@@ -123,9 +123,9 @@ game_loop :: inline () {
 
     {
         str := "PROJECT BOOMERANG";
-        courier_new := table_find_pointer(*Fonts.table, "courier_new");
-        measure := MeasureTextEx(courier_new, temp_c_string(str), xx courier_new.baseSize, 1);
-        add_to_draw_buffer(.SCREEN_UI, courier_new, str, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, xx measure, xx courier_new.baseSize, 1, WHITE);
+        // courier_new := table_find_pointer(*Fonts.table, "courier_new");
+        measure := MeasureTextEx(fonts.courier_new, temp_c_string(str), xx fonts.courier_new.baseSize, 1);
+        add_to_draw_buffer(.SCREEN_UI, fonts.courier_new, str, .{WINDOW_WIDTH-2, WINDOW_HEIGHT-2}, xx measure, xx fonts.courier_new.baseSize, 1, WHITE);
     }
 
     // Sort draw_buffer

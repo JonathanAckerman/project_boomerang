@@ -1,23 +1,43 @@
 FONTS_PATH :: "C:/jai/sandbox/project_boomerang/assets/fonts";
 
-Fonts: struct {
-    using table: Table(string, Font);
-}
+_font_table: Table(string, string);
+#insert #run compile_fonts();
 
-load_all_fonts :: () {
+// Fill the table in Fonts with (key=font_name, value=font_path)
+get_all_fonts :: () {
     font_files: [..] string;
-    visit_files(FONTS_PATH, false, *font_files, get_fonts, true, false);
+    visit_files(FONTS_PATH, false, *font_files, _get_fonts, true, false);
 
     for font_files {
         value := it;
         success, path, key := split_from_left(it, tprint("%/", FONTS_PATH));
         if success {
             key.count -= 4;
-            table_add(*Fonts.table, key, LoadFont(temp_c_string(value)));
+            table_add(*_font_table, key, value);
         }
     }
 }
-
-get_fonts :: (info: *File_Visit_Info, data: *[..] string) {
+_get_fonts :: (info: *File_Visit_Info, data: *[..] string) {
     array_add(data, copy_string(info.full_name));
+}
+
+compile_fonts :: () -> string {
+    get_all_fonts(); // we'll do this again at runtime when we need to load the fonts
+    sb: String_Builder; defer free_buffers(*sb);
+
+    // generate the fonts struct
+    print_to_builder(*sb, "fonts: struct {\n");
+    for _font_table {
+        print_to_builder(*sb, tprint("    %: Font;\n", it_index));
+    }
+    print_to_builder(*sb, "}\n\n");
+
+    // generate the function which we call to load the fonts
+    print_to_builder(*sb, "load_all_fonts :: () {\n");
+    for _font_table {
+        print_to_builder(*sb, tprint("    fonts.% = LoadFont(\"%\");\n", it_index, it));
+    }
+    print_to_builder(*sb, "}\n\n");
+
+    return builder_to_string(*sb);
 }
