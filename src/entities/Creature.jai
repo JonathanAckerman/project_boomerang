@@ -142,7 +142,7 @@ simulate :: (using creature: *Creature) {
             if boomerang.status == .RETURNING {
                 direction := position - boomerang.position;
                 boomerang.velocity = unit_vector(direction) * boomerang.move_speed;
-                if length(boomerang.position - position) < 10.0 {
+                if length(boomerang.position - position) < boomerang.collidebox.radius {
                     boomerang.bounces.cur = boomerang.bounces.max;
                     boomerang.status = .SHEATHED;
                     boomerang.emitter.is_active = false;
@@ -153,6 +153,11 @@ simulate :: (using creature: *Creature) {
                 if length(boomerang.position - boomerang.start_position) > boomerang.travel_distance {
                     boomerang.status = .RETURNING;
                     weapon.boomerang.hit_id = game.get_next_hit_id();
+                }
+                if length(boomerang.position - position) < boomerang.collidebox.radius {
+                    boomerang.bounces.cur = boomerang.bounces.max;
+                    boomerang.status = .SHEATHED;
+                    boomerang.emitter.is_active = false;
                 }
 
                 produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
