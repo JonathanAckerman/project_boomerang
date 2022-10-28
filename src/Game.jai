@@ -239,7 +239,10 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     if (cast(*Entity) catalyst.owner).entity_type != .CREATURE then return;
     if (cast(*Creature) catalyst.owner).type != .PLAYER then return;
 
-    base_position := (cast(*Entity) trigger.owner).position;
+    trigger_position := (cast(*Entity) trigger.owner).position;
+    catalyst_position := (cast(*Entity) catalyst.owner).position;
+    midpt := (trigger_position - catalyst_position) / 2.0;
+    base_position := catalyst_position + midpt;
 
     gameplay_paused_until = 2.0;
 
