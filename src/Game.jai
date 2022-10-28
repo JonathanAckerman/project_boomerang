@@ -3,7 +3,6 @@ Hit_ID :: #type,distinct u64;
 game: struct {
     state: Game_State;
     resetting: bool;
-    debug:     bool;
     paused:    bool;
     gameplay_paused_until: float64; // @Jay: maybe this should be ApolloTime?
     is_gameplay_paused :: inline () -> bool { return game.gameplay_paused_until > 0.0; }
@@ -39,6 +38,15 @@ game: struct {
 frame: struct {
     dt: float;
     scale: float = 1.0;
+}
+
+debug: struct {
+    render_colliders: bool = true;
+    dont_render_graphics: bool;
+}
+
+editor: struct {
+    enabled: bool;
 }
 
 Game_State :: enum {
@@ -83,14 +91,17 @@ game_loop :: inline () {
     BeginDrawing();
 
     ClearBackground(DARKGRAY);
-    DrawTextureV(map, world_to_screen(.{0,0}), WHITE);
 
-    for _Wall     render(it);
-    for _Creature render(it);
+    if !debug.dont_render_graphics {
+        DrawTextureV(map, world_to_screen(.{0,0}), WHITE);
 
-    for particle_system.particles { render(it); }
+        for _Wall     render(it);
+        for _Creature render(it);
 
-    if debug {
+        for particle_system.particles render(it);
+    }
+
+    if debug.render_colliders {
         using collision_system;
         draw_colliders(hitboxes,      RED);
         draw_colliders(hurtboxes,     BLUE);

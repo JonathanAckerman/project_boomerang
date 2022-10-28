@@ -64,7 +64,15 @@ handle_input :: inline () {
         }
     }
 
+    if IsKeyPressed(xx KeyboardKey.F1)  then editor.enabled = !editor.enabled;
     if IsKeyPressed(xx KeyboardKey.F5)  then game.resetting = true;
     if IsKeyPressed(xx KeyboardKey.F9)  then game.paused = !game.paused;
-    if IsKeyPressed(xx KeyboardKey.F11) then game.debug = !game.debug;
+    if IsKeyPressed(xx KeyboardKey.F11) {
+        if IsKeyDown(xx KeyboardKey.LEFT_SHIFT) || IsKeyDown(xx KeyboardKey.RIGHT_SHIFT) {
+            debug.dont_render_graphics = !debug.dont_render_graphics;
+        }
+        else {
+            debug.render_colliders     = !debug.render_colliders;
+        }
+    }
 }
