@@ -34,13 +34,6 @@ game: struct {
     get_next_hit_id :: () -> Hit_ID { game._hit_id += 1; return game._hit_id; }
 
     map: Texture;
-
-    test_trigger: Trigger;
-}
-
-Trigger :: struct {
-    is_active := true;
-    using #as collider: Collider = .{shape=.RECT, position=.{530, 550}, size=.{10, 100}};
 }
 
 frame: struct {
@@ -49,7 +42,8 @@ frame: struct {
 }
 
 Game_State :: enum {
-    INITIAL;
+    OPEN_WORLD;
+    ARENA_FIGHT;
 }
 
 game_loop :: inline () {
@@ -82,10 +76,6 @@ game_loop :: inline () {
 
     player_obj, _ := from_handle(player); 
     camera.position = player_obj.position;
-
-    if test_trigger.is_active {
-        produce_triggerbox(test_trigger, *test_trigger, on_trigger_fight);
-    }
 
     handle_collision();
 
@@ -233,42 +223,30 @@ game_reset :: () {
         array_add(*particle_system.emitters, e);
         c.weapon.boomerang.emitter = *particle_system.emitters[particle_system.emitters.count-1];
         player = spawn(c);
-    }
 
-    // init walls
-    {
-        w: Wall;
-        w.position = .{1000, 505};
-        array_add(*w.animations, NewAnimation("wall/idle"));
-        w.has_collider = true;
-        w.collider.shape = .RECT;
-        w.collider.size = .{1000, 100};
-        w.has_rigidbody = true;
-        w.entity_type = .WALL;
-        spawn(w);
-
-        w.position = .{1000, 1495};
-        w.entity_type = .WALL;
-        spawn(w);
-
-        w.position = .{1500, 1000};
-        w.collider.size = .{100, 1000};
-        w.entity_type = .WALL;
-        spawn(w);
-
-        w.position = .{500, 1050};
-        w.collider.size = .{100, 900};
-        w.entity_type = .WALL;
-        spawn(w);
+        c = Creatures.BIG_GUY;
+        c.position = .{500, 500};
+        c.collider.position = c.position;
+        array_add(*c.animations, NewAnimation("big_guy/idle"));
+        c.on_death = end_arena;
+        spawn(c);
     }
 }
 
 on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     using game;
+    
+    if (cast(*Entity) catalyst.owner).entity_type != .CREATURE then return;
+    if (cast(*Creature) catalyst.owner).type != .PLAYER then return;
+
+    base_position := (cast(*Entity) trigger.owner).position;
+
     gameplay_paused_until = 2.0;
 
     c := Creatures.SMALL_FRY;
-    c.position = .{700, 700};
+    x := random_get_within_range(-450, 450);
+    y := random_get_within_range(-450, 450);
+    c.position = base_position + xy(x, y);
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("small_fry/idle"));
     spawn(c);
@@ -295,7 +273,9 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     array_add(*particle_system.emitters, e);
 
     c = Creatures.MEDIUM_FRY;
-    c.position = .{800, 700};
+    x = random_get_within_range(-450, 450);
+    y = random_get_within_range(-450, 450);
+    c.position = base_position + xy(x, y);
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("medium_fry/idle"));
     spawn(c);
@@ -319,10 +299,11 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     array_add(*particle_system.emitters, e);
 
     c = Creatures.BIG_FRY;
-    c.position = .{1000, 700};
+    x = random_get_within_range(-450, 450);
+    y = random_get_within_range(-450, 450);
+    c.position = base_position + xy(x, y);
     c.collider.position = c.position;
     array_add(*c.animations, NewAnimation("big_fry/idle"));
-    c.on_death = end_arena;
     spawn(c);
     e = .{
         is_active=true,
@@ -343,17 +324,32 @@ on_trigger_fight :: (catalyst: Catalystbox, trigger: Triggerbox) {
     e.texture = LoadTexture("C:/jai/sandbox/project_boomerang/assets/textures/cloud.png");
     array_add(*particle_system.emitters, e);
 
-    w: Wall;
-    w.position = .{500, 550};
-    array_add(*w.animations, NewAnimation("wall/idle"));
-    w.has_collider = true;
-    w.collider.shape = .RECT;
-    w.collider.size = .{100, 100};
-    w.has_rigidbody = true;
-    w.entity_type = .WALL;
-    spawn(w);
+    // arena walls
+    {
+        w: Wall;
+        w.position = base_position - .{0, 500};
+        array_add(*w.animations, NewAnimation("wall/idle"));
+        w.has_collider = true;
+        w.collider.shape = .RECT;
+        w.collider.size = .{1000, 100};
+        w.has_rigidbody = true;
+        w.entity_type = .WALL;
+        spawn(w);
 
-    (cast(*Trigger) trigger.owner).is_active = false;
+        w.position = base_position + .{500, 0};
+        w.collider.size = .{100, 1000};
+        spawn(w);
+
+        w.position = base_position + .{0, 500};
+        w.collider.size = .{1000, 100};
+        spawn(w);
+
+        w.position = base_position - .{500, 0};
+        w.collider.size = .{100, 1000};
+        spawn(w);
+    }
+
+    game.state = .ARENA_FIGHT;
 }
 
 player_on_hit :: (hurtable: *Hurtable, hit: Hit) {

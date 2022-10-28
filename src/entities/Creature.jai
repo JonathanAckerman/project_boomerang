@@ -59,6 +59,7 @@ Creature_Type :: enum {
     SMALL_FRY;
     MEDIUM_FRY;
     BIG_FRY;
+    BIG_GUY;
 }
 
 update :: (using creature: *Creature) {
@@ -67,6 +68,7 @@ update :: (using creature: *Creature) {
         produce_collidebox(collider, creature, creature_on_collision_started, creature_on_collision);
     }
 
+    if has_ai && type == .BIG_GUY && game.state == .OPEN_WORLD then produce_triggerbox(collider, creature, on_trigger_fight);
     if !has_ai then produce_catalystbox(collider, creature);
 
     // @TEMP: for now make the physics collidebox also be the hurtbox
@@ -80,6 +82,8 @@ update :: (using creature: *Creature) {
                 // @TEMP: use collidebox for hitbox
                 produce_hitbox(boomerang.collidebox.collider, creature, make_hit(boomerang.hit_id, 1, tick_rate=boomerang.tick_rate));
                 boomerang.collidebox.position = boomerang.position;
+
+                if !has_ai && game.state == .OPEN_WORLD then produce_catalystbox(boomerang.collidebox.collider, creature);
             }
 
             if boomerang.status == .LEAVING || boomerang.status == .BOUNCING {
@@ -255,6 +259,19 @@ Creatures: struct {
         collider.radius = 30.0,
         has_collider = true,
         mass = 200,
+        has_rigidbody = true,
+        rigidbody.is_static = false,
+        entity_type = .CREATURE,
+    };
+    BIG_GUY :: Creature.{
+        rotation_speed = .{min=0.1, max=5.0, cur=1.0},
+        move_speed = .{min=0.0, max=550.0, cur=20.0},
+        health = .{min=0, max=10, cur=10},
+        type = .BIG_GUY,
+        has_ai = true,
+        collider.radius = 100.0,
+        has_collider = true,
+        mass = 300,
         has_rigidbody = true,
         rigidbody.is_static = false,
         entity_type = .CREATURE,
