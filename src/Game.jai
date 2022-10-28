@@ -3,7 +3,6 @@ Hit_ID :: #type,distinct u64;
 game: struct {
     state: Game_State;
     resetting: bool;
-    debug:     bool = true;
     paused:    bool;
     gameplay_paused_until: float64; // @Jay: maybe this should be ApolloTime?
     is_gameplay_paused :: inline () -> bool { return game.gameplay_paused_until > 0.0; }
