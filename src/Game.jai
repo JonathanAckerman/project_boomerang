@@ -406,11 +406,10 @@ boomerang_on_collision_started :: (owner: *void, collision: Collision) {
     if other.entity_type == .CREATURE && weapon == *(cast(*Creature) collision.other).weapon
         return;
 
-    weapon.boomerang.position += collision.projection;
-
     if other.entity_type == {
         case .CREATURE;
             if (cast(*Creature) collision.other).type == .BIG_GUY {
+                weapon.boomerang.position += collision.projection;
                 weapon.boomerang.status = .RETURNING;
                 weapon.boomerang.hit_id = game.get_next_hit_id();
             }
@@ -427,9 +426,7 @@ boomerang_on_collision_started :: (owner: *void, collision: Collision) {
                 return;
             }
 
-            // print("collision with: %\n", other);
-            // print("normal: %\n", collision.normal);
-            // print("velocity: %\n", weapon.boomerang.velocity);
+            weapon.boomerang.position += collision.projection;
 
             if length(weapon.boomerang.velocity) > 0.0
             {
@@ -445,7 +442,6 @@ boomerang_on_collision_started :: (owner: *void, collision: Collision) {
                     }
                     if v < n then incidence_angle *= -1.0;
                 }
-                // print("angle: %\n", incidence_angle);
 
                 weapon.boomerang.velocity = unit_vector(rotate_vector(collision.normal, incidence_angle)) * weapon.boomerang.move_speed;
                 weapon.boomerang.start_position = weapon.boomerang.position;
