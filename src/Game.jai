@@ -43,6 +43,8 @@ frame: struct {
 debug: struct {
     render_colliders: bool = true;
     dont_render_graphics: bool;
+
+    collider_render_texture: RenderTexture;
 }
 
 editor: struct {
@@ -97,20 +99,26 @@ game_loop :: inline () {
 
     if debug.render_colliders {
         using collision_system;
-        draw_colliders(hitboxes,      RED);
-        draw_colliders(hurtboxes,     BLUE);
-        draw_colliders(collideboxes,  YELLOW);
-        draw_colliders(catalystboxes, BLACK);
-        draw_colliders(triggerboxes,  WHITE);
+
+        if !game.paused && !game.is_gameplay_paused() {
+            BeginTextureMode(debug.collider_render_texture);
+            ClearBackground(BLANK);
+            draw_colliders(hitboxes,      RED);
+            draw_colliders(hurtboxes,     BLUE);
+            draw_colliders(collideboxes,  YELLOW);
+            draw_colliders(catalystboxes, BLACK);
+            draw_colliders(triggerboxes,  WHITE);
+            EndTextureMode();
+        }
 
         draw_colliders :: (array: [] $T, color: Color) #expand {
             for array {
                 ss_pos := world_to_screen(it.position);
                 if it.shape == {
                     case .CIRCLE;
-                        add_to_draw_buffer(.CIRCLE, ss_pos, it.radius, color);
+                        DrawCircleLines(xx ss_pos.x, xx ss_pos.y, it.radius, color);
                     case .RECT;
-                        add_to_draw_buffer(.RECT, ss_pos, it.size, color);
+                        DrawRectangleLines(xx (ss_pos.x - it.size.x/2), xx (ss_pos.y - it.size.y/2), xx it.size.x, xx it.size.y, color);
                 }
             }
         }
@@ -136,7 +144,7 @@ game_loop :: inline () {
             else world_to_screen(it.position);
 
         if it.type == {
-            case .DEBUG;
+            case .DEBUG; // this is just for debug shapes not handled by the collision_system
                 using it.debug;
                 if shape == {
                     case .CIRCLE;
@@ -157,6 +165,11 @@ game_loop :: inline () {
         } 
     }
     array_reset_keeping_memory(*draw_buffer);
+
+    // draw collision_system
+    source : Rectangle = .{0, -WINDOW_HEIGHT, WINDOW_WIDTH, -WINDOW_HEIGHT};
+    dest   : Rectangle = .{0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    DrawTexturePro(debug.collider_render_texture.texture, source, dest, .{0, 0}, 0, WHITE);
 
     EndDrawing();
 
@@ -188,6 +201,8 @@ game_reset :: () {
 
     game = .{};
     frame = .{};
+    debug.collider_render_texture = LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT);
+
     array_reserve(*collision_system.hitboxes, 1024);
     array_reserve(*collision_system.hurtboxes, 1024);
     array_reserve(*collision_system.collideboxes, 1024);
