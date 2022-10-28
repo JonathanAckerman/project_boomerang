@@ -87,7 +87,7 @@ update :: (using creature: *Creature) {
             }
 
             if boomerang.status == .LEAVING || boomerang.status == .BOUNCING {
-                produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision);
+                produce_collidebox(boomerang.collidebox.collider, *creature.weapon, boomerang_on_collision_started, null);
             }
     }
 }

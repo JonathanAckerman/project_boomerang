@@ -3,7 +3,7 @@ Hit_ID :: #type,distinct u64;
 game: struct {
     state: Game_State;
     resetting: bool;
-    debug:     bool;
+    debug:     bool = true;
     paused:    bool;
     gameplay_paused_until: float64; // @Jay: maybe this should be ApolloTime?
     is_gameplay_paused :: inline () -> bool { return game.gameplay_paused_until > 0.0; }
@@ -56,7 +56,7 @@ game_loop :: inline () {
     // ---------------------------------------------------------------------------------------
     for _Wall     update(it);
     for _Creature update(it);
-    
+
     // Simulate the game rules, updating just the game state
     // ---------------------------------------------------------------------------------------
     handle_input(); // @Note: eventually we'll want input that isn't related to the game state
@@ -378,9 +378,16 @@ enemy_on_hit :: (hurtable: *Hurtable, hit: Hit) {
     }
 }
 
-boomerang_on_collision :: (owner: *void, collision: Collision) {
+boomerang_on_collision_started :: (owner: *void, collision: Collision) {
     weapon := cast(*Weapon) owner;
     other := cast(*Entity) collision.other;
+
+    // if the boomerang collided with it's owner
+    if other.entity_type == .CREATURE && weapon == *(cast(*Creature) collision.other).weapon
+        return;
+
+    weapon.boomerang.position += collision.projection;
+
     if other.entity_type == {
         case .CREATURE;
             if (cast(*Creature) collision.other).type == .BIG_GUY {
