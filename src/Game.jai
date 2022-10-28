@@ -382,7 +382,11 @@ boomerang_on_collision :: (owner: *void, collision: Collision) {
     weapon := cast(*Weapon) owner;
     other := cast(*Entity) collision.other;
     if other.entity_type == {
-        case .CREATURE; return;
+        case .CREATURE;
+            if (cast(*Creature) collision.other).type == .BIG_GUY {
+                weapon.boomerang.status = .RETURNING;
+                weapon.boomerang.hit_id = game.get_next_hit_id();
+            }
         case .PROJECTILE;
             // return to player and @TODO deflect projectile
             if weapon.boomerang.status == .LEAVING then weapon.boomerang.status = .RETURNING;
