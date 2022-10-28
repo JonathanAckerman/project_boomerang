@@ -158,7 +158,7 @@ game_loop :: inline () {
                 using it.texture;
                 draw_texture_centered_with_rotation(texture, ss(position), rotation, scale, color);
             case .ANIM;
-                draw_texture_centered_with_rotation(it.frame, position, it.rotation, is_screen_space);
+                draw_texture_centered_with_rotation(it.frame, position, it.rotation, it.size, is_screen_space);
             case .TEXT;
                 using it.text;
                 DrawTextPro(font, temp_c_string(str), position, origin, rotation, size, spacing, color);

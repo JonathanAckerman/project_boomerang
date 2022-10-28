@@ -16,7 +16,7 @@ Animation :: struct {
 }
 
 Animation_Frame :: struct {
-    using texture: *Texture;
+    using texture: Texture;
     tint: Color = WHITE;
     size: Vector2;
     hitboxes: [..] Hitbox;

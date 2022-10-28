@@ -1,14 +1,21 @@
-draw_texture_centered_with_rotation :: (frame: Animation_Frame, pos: Vector2, rotation: float, is_screen_space: bool = false)
+draw_texture_centered_with_rotation :: (frame: Animation_Frame, pos: Vector2, rotation: float, size: Vector2, is_screen_space: bool = false)
 {
-    scale := frame.size.x / frame.texture.width;
-    pos_to_center := frame.size/2;
+    pos_to_center := size/2;
     if !is_screen_space {
         pos_to_center *= game.camera.zoom;
-        scale *= game.camera.zoom;
     }
     rotated_pos_to_center := rotate_vector(pos_to_center, -rotation);
     drawpos := pos - rotated_pos_to_center;
-    DrawTextureEx(frame.texture, drawpos, -rad2deg(rotation), scale, frame.tint);
+
+    source : Rectangle; 
+    source.width  = xx frame.texture.width; 
+    source.height = xx frame.texture.height;
+    dest   : Rectangle;
+    dest.x = drawpos.x;
+    dest.y = drawpos.y;
+    dest.width  = xx size.x;
+    dest.height = xx size.y;
+    DrawTexturePro(frame.texture, source, dest, .{0,0}, -rad2deg(rotation), frame.tint);
 }
 
 draw_texture_centered_with_rotation :: (texture: Texture, pos: Vector2, rotation: float, scale: float, color: Color)
@@ -36,6 +43,7 @@ Draw_Buffer_Item :: struct {
             position: Vector2;
             rotation: float;
             frame: Animation_Frame;
+            size: Vector2;
         }
         texture: struct {
             texture: *Texture;
@@ -97,16 +105,21 @@ add_to_draw_buffer :: (shape: Draw_Buffer_Item.debug.debug_shape, position: Vect
     array_add(*draw_buffer, buffered);
 }
 
-add_to_draw_buffer :: (frame: Animation_Frame, position: Vector2, traunch: Draw_Traunch, forward: Vector2, scale: float = 1.0) {
+add_to_draw_buffer :: (frame: Animation_Frame, position: Vector2, traunch: Draw_Traunch, forward: Vector2) {
+    add_to_draw_buffer(frame, position, traunch, forward, xy(xx frame.texture.width, xx frame.texture.height));
+}
+add_to_draw_buffer :: (frame: Animation_Frame, position: Vector2, traunch: Draw_Traunch, forward: Vector2, resize: Vector2) {
     buffered: Draw_Buffer_Item;
     buffered.frame = frame;
-    buffered.frame.size *= scale;
+    buffered.size = frame.size;
+    if resize != .{0, 0} then buffered.size = resize;
     buffered.position = position;
     buffered.rotation = atan2(-forward.y, forward.x);
     buffered.traunch = traunch;
     buffered.type = .ANIM;
     array_add(*draw_buffer, buffered);
 }
+
 add_to_draw_buffer :: (texture: *Texture, position: Vector2, traunch: Draw_Traunch, forward: Vector2, color: Color, scale: float = 1.0) {
     buffered: Draw_Buffer_Item;
     buffered.texture.texture = texture;
