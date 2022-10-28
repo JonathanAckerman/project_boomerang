@@ -2,15 +2,13 @@ Wall :: struct {
     using #as entity: Entity;
 }
 
-update :: (using wall: *Wall) {
+simulate :: (using wall: *Wall) {
+    if game.paused || game.is_gameplay_paused() return;
+    
     if has_collider {
         collider.position = position;
         produce_collidebox(collider, wall, null, null);
     }
-}
-
-simulate :: (using wall: *Wall) {
-    if game.paused || game.is_gameplay_paused() return;
 }
 
 render :: (using wall: *Wall) {

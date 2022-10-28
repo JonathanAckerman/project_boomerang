@@ -58,15 +58,9 @@ game_loop :: inline () {
     using game;
     using context.entity_storage;
     frame.dt = GetFrameTime() * frame.scale;
-    game.gameplay_paused_until -= frame.dt / frame.scale;
+    if !game.paused then game.gameplay_paused_until -= frame.dt / frame.scale;
 
-    // Update the objects in the application
-    // ---------------------------------------------------------------------------------------
-    for _Wall     update(it);
-    for _Creature update(it);
-
-    // Simulate the game rules, updating just the game state
-    // ---------------------------------------------------------------------------------------
+    // simulate ------------------------------------------------------------------------------
     handle_input(); // @Note: eventually we'll want input that isn't related to the game state
 
     simulate(*slowmo);
