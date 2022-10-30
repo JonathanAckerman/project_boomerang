@@ -23,8 +23,10 @@ simulate_dog :: () {
 
         chase_timer = 0.0;
     }
-    else if boomerang.status != .RETURNING {
-        if chase_timer >= chase_delay {
+    else {
+        if boomerang.return_timer >= boomerang.return_delay return;
+
+        if chase_timer >= chase_delay && distance(position, boomerang.position) > 5.0 {
             direction := unit_vector(boomerang.position - position);
             position += direction * move_speed * frame.dt;
         }

@@ -33,6 +33,8 @@ Weapon :: struct {
             hit_id: Hit_ID;
             tick_rate := 0.5;
             emitter: *Particle_Emitter;
+            return_delay :: 1.0;
+            return_timer := 0.0;
         }
 
         gloves: struct {
@@ -120,6 +122,10 @@ simulate :: (using creature: *Creature) {
     if weapon.type == {
         case .BOOMERANG;
             boomerang := *weapon.boomerang;
+            if boomerang.status == .SHEATHED {
+                boomerang.return_timer = 0.0;
+            }
+
             if boomerang.status != .SHEATHED {
                 boomerang.position += boomerang.velocity * frame.dt;
 
@@ -140,11 +146,19 @@ simulate :: (using creature: *Creature) {
             } 
             
             if boomerang.status == .RETURNING {
-                direction := position - boomerang.position;
-                boomerang.velocity = unit_vector(direction) * boomerang.move_speed;
-                if length(boomerang.position - position) < boomerang.collidebox.radius {
-                    boomerang.bounces.cur = boomerang.bounces.max;
-                    boomerang.status = .SHEATHED;
+                if boomerang.return_timer >= boomerang.return_delay {
+                    boomerang.emitter.is_active = true;
+                    direction := position - boomerang.position;
+                    boomerang.velocity = unit_vector(direction) * boomerang.move_speed;
+                    if length(boomerang.position - position) < boomerang.collidebox.radius {
+                        boomerang.bounces.cur = boomerang.bounces.max;
+                        boomerang.status = .SHEATHED;
+                        boomerang.emitter.is_active = false;
+                    }
+                }
+                else {
+                    boomerang.return_timer += frame.dt;
+                    boomerang.velocity = .{};
                     boomerang.emitter.is_active = false;
                 }
             }
