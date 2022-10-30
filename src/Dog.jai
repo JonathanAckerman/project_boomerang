@@ -26,9 +26,12 @@ simulate_dog :: () {
     else {
         if boomerang.return_timer >= boomerang.return_delay return;
 
-        if chase_timer >= chase_delay && distance(position, boomerang.position) > 5.0 {
-            direction := unit_vector(boomerang.position - position);
-            position += direction * move_speed * frame.dt;
+        if chase_timer >= chase_delay {
+            if distance(position, boomerang.position) > 5.0 {
+                direction := unit_vector(boomerang.position - position);
+                position += direction * move_speed * frame.dt;
+            }
+            else boomerang.return_timer = boomerang.return_delay;
         }
         else chase_timer += frame.dt;
     }
