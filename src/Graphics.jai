@@ -108,9 +108,10 @@ add_to_draw_buffer :: (shape: Draw_Buffer_Item.debug.debug_shape, position: Vect
 add_to_draw_buffer :: (frame: Animation_Frame, position: Vector2, traunch: Draw_Traunch, forward: Vector2) {
     add_to_draw_buffer(frame, position, traunch, forward, xy(xx frame.texture.width, xx frame.texture.height));
 }
-add_to_draw_buffer :: (frame: Animation_Frame, position: Vector2, traunch: Draw_Traunch, forward: Vector2, resize: Vector2) {
+add_to_draw_buffer :: (frame: Animation_Frame, position: Vector2, traunch: Draw_Traunch, forward: Vector2, resize: Vector2, color: Color = WHITE) {
     buffered: Draw_Buffer_Item;
     buffered.frame = frame;
+    buffered.frame.tint = color;
     buffered.size = frame.size;
     if resize != .{0, 0} then buffered.size = resize;
     buffered.position = position;

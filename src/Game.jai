@@ -9,6 +9,16 @@ game: struct {
     slowmo: Slowmo;
 
     player: Handle(Creature);
+    dog: struct {
+        position: Vector2;
+        goal_position: Vector2;
+        forward:  Vector2;
+        move_speed := 500.0;
+        animation: Animation;
+        chase_delay :: 0.2;
+        chase_timer := 0.0;
+    }
+
     camera: struct {
         zoom := 1.0;
         position: Vector2;
@@ -67,6 +77,8 @@ game_loop :: inline () {
 
     simulate(*slowmo);
 
+    simulate_dog();
+
     for _Wall     simulate(it);
     for _Creature simulate(it);
 
@@ -87,6 +99,8 @@ game_loop :: inline () {
     BeginDrawing();
 
     ClearBackground(DARKGRAY);
+
+    render_dog();
 
     if !debug.dont_render_graphics {
         DrawTextureV(map, world_to_screen(.{0,0}), WHITE);
@@ -213,6 +227,9 @@ game_reset :: () {
         max_particles += it.max_particles;
     }
     array_reserve(*particle_system.particles, max_particles);
+
+    // init dog
+    dog.animation = NewAnimation("player/idle");
 
     // init creatures
     {

@@ -30,6 +30,7 @@ main :: () {
 #load "Collision.jai";
 #load "Particles.jai";
 #load "Time.jai";
+#load "Dog.jai";
 
 #import "Math";
 #import "Basic";
